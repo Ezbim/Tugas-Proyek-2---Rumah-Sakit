@@ -3,12 +3,12 @@ const LandingPage = () => {
 
     return (<div>
         {/* Hero Section */}
-        <section className="bg-blue-600 bg-center text-white py-20" style={{ backgroundImage: "url(https://cms.disway.id/uploads/7587a2e0616397c1978b997c0a9fb676.jpg)" }}>
+        <section className="bg-purple-600 bg-center text-white py-20" style={{ backgroundImage: "url(https://cms.disway.id/uploads/7587a2e0616397c1978b997c0a9fb676.jpg)" }}>
             <div className="container mx-auto text-center">
                 <h1 className="text-5xl font-bold mb-4">Selamat Datang di Rumah Sakit Kami</h1>
                 <p className="text-xl mb-8">Memberikan perawatan penuh kasih untuk kesehatan dan kesejahteraan Anda.</p>
-                <NavLink className="bg-white text-blue-600 font-bold py-2 px-4 rounded-full" to="/pendaftaran">
-                    Daftar / Reservasi
+                <NavLink className="bg-white text-purple-600 font-bold py-2 px-4 rounded-full" to="/pendaftaran">
+                    Daftar
                 </NavLink>
             </div>
         </section>
@@ -45,7 +45,7 @@ const LandingPage = () => {
             <div className="container mx-auto text-center">
                 <h2 className="text-4xl font-bold mb-8">Hubungi Kami</h2>
                 <p className="text-xl mb-8">Punya pertanyaan atau perlu menjadwalkan janji? Hubungi kami!</p>
-                <button className="bg-blue-600 text-white font-bold py-2 px-4 rounded-full">
+                <button className="bg-purple-600 text-white font-bold py-2 px-4 rounded-full">
                     Hubungi Kami
                 </button>
             </div>

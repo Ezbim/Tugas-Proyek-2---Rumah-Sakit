@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState('');
     const [role, setRole] = useState('')
     const [nama_lengkap, setnama_lengkap] = useState('')
+    
     const login = (username,role,nama_lengkap) => {
         setUser({ username });
         setRole({role})

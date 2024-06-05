@@ -118,7 +118,7 @@ const Register = ({ switchMode, onRegister }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState(''); 
     const [dokter_id, setdokter_id] = useState(''); 
-    const [role, setRole] = useState('pasien');
+    const [role, setRole] = useState('petugas');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -137,13 +137,13 @@ const Register = ({ switchMode, onRegister }) => {
                         onChange={(e) => setRole(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="pasien">Pasien</option>
+                        <option value="petugas">Petugas</option>
                         <option value="dokter">Dokter</option>
                     </select>
                 </div>
-                {role === 'pasien' ? (
+                {role === 'petugas' ? (
                 <div className="mb-4">
-                    <label htmlFor="nama_lengkap" className="block text-gray-700">Full Name:</label>
+                    <label htmlFor="nama_lengkap" className="block text-gray-700">Nama Lengkap: </label>
                     <input
                         type="text"
                         id="nama_lengkap"
