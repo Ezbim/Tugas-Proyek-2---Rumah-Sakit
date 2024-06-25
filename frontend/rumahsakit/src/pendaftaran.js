@@ -238,7 +238,7 @@ function Pendaftaran() {
                 {step === 2 && (
                     <>
                         <div className="flex items-center justify-between mb-4">
-                            <h1 className="text-2xl font-bold">Pendaftaran Pasien {poliklinik}</h1>
+                            <h1 className="text-2xl font-bold">Pendaftaran Pasien </h1>
                             <p>Step 2 dari 3</p>
                         </div>
                         <form>
@@ -299,7 +299,7 @@ function Pendaftaran() {
                             <p>Step 3 dari 3</p>
                         </div>
                         <div className="mb-4">
-                            <h2 className="text-xl font-semibold">Rincian Pendaftaran:</h2>
+                            <h2 className="text-xl">Rincian Pendaftaran:</h2>
                             <p><strong>Nama Pasien:</strong> {isPasienBaru ? nama_pasien : pasienData[0].nama_pasien}</p>
                             {!isPasienBaru && <p><strong>ID Pasien:</strong> {!isPasienBaru ? pasien_id : "N/A"}</p>}
                             <p><strong>Poliklinik:</strong> {poliklinikOption[poliklinik - 1]?.nama_poliklinik}</p>
@@ -334,7 +334,7 @@ function Pendaftaran() {
                             
                            
                             <p className='text-center text-xl my-2'>Poliklinik :<br></br><strong className='text-2xl'>{poliklinikOption[registrationData.antrian.poliklinik_id - 1]?.nama_poliklinik}</strong> </p>
-                            <p className='text-center text-xl my-2 mb-10'>Nomor Antrian:<br></br><strong className='text-5xl'> 0{registrationData.antrian.id}</strong></p>
+                            <p className='text-center text-xl my-2 mb-10'>Nomor Antrian:<br></br><strong className='text-5xl'> 0{registrationData.antrian.urutan_antrian}</strong></p>
     
                      
                             <p className='my-2 mx-8 text-center text-sm'>Dibuat pada : <p className='font-bold'>{formatDate(registrationData.antrian.tanggal)}</p></p>

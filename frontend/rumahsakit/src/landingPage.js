@@ -7,14 +7,14 @@ const LandingPage = () => {
             <div className="container mx-auto text-center">
                 <h1 className="text-5xl font-bold mb-4">Selamat Datang di Rumah Sakit Kami</h1>
                 <p className="text-xl mb-8">Memberikan perawatan penuh kasih untuk kesehatan dan kesejahteraan Anda.</p>
-                <NavLink className="bg-white text-purple-600 font-bold py-2 px-4 rounded-full" to="/pendaftaran">
+                <NavLink className="bg-white text-black font-bold py-2 px-4 rounded-full border-2 border-purple-400" to="/pendaftaran">
                     Daftar
                 </NavLink>
             </div>
         </section>
 
         {/* Services Section */}
-        <section className="py-20">
+        {/* <section className="py-20">
             <div className="container mx-auto text-center">
                 <h2 className="text-4xl font-bold mb-8">Layanan Kami</h2>
                 <div className="flex flex-wrap justify-center">
@@ -38,16 +38,14 @@ const LandingPage = () => {
                     </div>
                 </div>
             </div>
-        </section>
+        </section> */}
 
         {/* Contact Section */}
         <section className="bg-gray-100 py-20">
             <div className="container mx-auto text-center">
                 <h2 className="text-4xl font-bold mb-8">Hubungi Kami</h2>
-                <p className="text-xl mb-8">Punya pertanyaan atau perlu menjadwalkan janji? Hubungi kami!</p>
-                <button className="bg-purple-600 text-white font-bold py-2 px-4 rounded-full">
-                    Hubungi Kami
-                </button>
+                <p className="text-xl mb-2">Punya pertanyaan atau perlu menjadwalkan janji? Hubungi kami!</p>
+                <p className=' w-auto max-w-40 rounded-md text-black p-4 text-2xl flex mx-auto items-center justify-center border'>081234567890</p>
             </div>
         </section>
     </div>);

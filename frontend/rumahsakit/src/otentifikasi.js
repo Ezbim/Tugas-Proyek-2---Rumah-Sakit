@@ -104,7 +104,7 @@ const Login = ({ switchMode, onLogin }) => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                <button type="submit" className="w-full bg-black text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" className="w-full bg-purple-400 text-white py-2 rounded-md hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     Login
                 </button>
                 <p className="mt-4 text-center">Belum punya akun ? <span onClick={switchMode} className="text-blue-500 cursor-pointer">Register disini</span></p>
@@ -185,7 +185,7 @@ const Register = ({ switchMode, onRegister }) => {
                     />
                 </div>
               
-                <button type="submit" className="w-full bg-black text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" className="w-full bg-purple-400 text-white py-2 rounded-md hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     Register
                 </button>
                 <p className="mt-4 text-center">Sudah punya akun? <span onClick={switchMode} className="text-blue-500 cursor-pointer">Login disini</span></p>

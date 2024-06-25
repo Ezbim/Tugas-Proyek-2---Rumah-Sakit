@@ -21,6 +21,7 @@ const Navigation = () => {
         console.log(user, role)
     }, [user])
 
+    const location = useLocation();
     return (
         <div className="navi">
             <nav className="text-black" >
@@ -44,31 +45,37 @@ const Navigation = () => {
                         </svg>
                         <NavLink to="/">RS UPAYA SEHAT</NavLink>
                     </div>
-                    <div className="hidden md:flex space-x-4 px-10">
+                    <div className="items-center hidden md:flex space-x-4 px-10">
 
-                        {role.role === 'dokter' || role.role === 'petugas' &&
-                            <NavLink to='/pendaftaran' className='navPendaftaran block text-black py-2'>
+                        {role === 'dokter' || role === 'petugas' &&
+                        <>
+                        <NavLink to='/pendaftaran' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
                                 Pendaftaran
                             </NavLink>
+                            <NavLink to='/antrian' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/antrian' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                Antrian
+                            </NavLink>
+                        </>
+                            
                         }
 
-                        {role.role === 'petugas' &&
+                        {role === 'petugas' &&
 
                             <>
-                                <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
+                                <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
                                     Rekam Medis
                                 </NavLink>
-                                <NavLink to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
+                                <NavLink to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
                                     Rawat Inap
                                 </NavLink>
-                                <NavLink to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
+                                <NavLink to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
                                     Rawat Jalan
                                 </NavLink>
                             </>
 
                         }
 
-                        {role.role === 'dokter' &&
+                        {role === 'dokter' &&
                             <>
                                 <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
                                     RekamMedis
@@ -92,7 +99,7 @@ const Navigation = () => {
 
 
                             ) : (
-                                <NavLink to='/otentifikasi' className='navPendaftaran block text-black py-2'>
+                                <NavLink to='/otentifikasi' className='navPendaftaran block text-black px-4 p-2 rounded-full border-2 border-purple-400'>
                                     Login
                                 </NavLink>
                             )}
@@ -111,21 +118,30 @@ const Navigation = () => {
 
                     <div className={`${popUser ? 'flex' : 'hidden'} absolute -bottom-48 right-5 bg-white p-5 w-80 border-2`} onBlur={() => { setPopUser(false) }} tabIndex={1}>
                         <div className="text-black">
-                            <h2 className="font-bold mb-2">{user.username}</h2>
-                            <p>{nama_lengkap.nama_lengkap}</p>
+                            <h2 className="font-bold mb-2">{user}</h2>
+                            <p>{nama_lengkap}</p>
                             <p>Terdaftar sebagai :
-                                <span className="font-bold"> {role.role}</span></p>
+                                <span className="font-bold"> {role}</span></p>
                             <button className="border-2 p-3 rounded-full mt-3" onClick={logout}>Logout</button>
                         </div>
                     </div>
 
                 </div>
                 <div className={`${isOpen ? 'flex' : 'hidden'} md:hidden justify-center items-center flex-col border-b-2 border-b-gray`}>
-                    <NavLink to='/pendaftaran' className='navPendaftaran  text-black py-2'>
+                    <NavLink onClick={()=>setIsOpen(false)} to='/pendaftaran' className={`w-40 text-center text-black py-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
                         Pendaftaran
                     </NavLink>
-                    <NavLink to='/otentifikasi' className='navPendaftaran block text-black py-2'>
+                    <NavLink onClick={()=>setIsOpen(false)}  to='/otentifikasi' className={`w-40 text-center text-black py-2 ${location.pathname === '/otentifikasi' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
                         Login
+                    </NavLink>
+                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                        Rekam Medis
+                    </NavLink>
+                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                        Rawat Inap
+                    </NavLink>
+                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                        Rawat Jalan
                     </NavLink>
                 </div>
             </nav >

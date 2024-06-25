@@ -11,6 +11,7 @@ import RawatInap from './rawatInap';
 import RekamMedis from './rekamMedis';
 import RawatJalan from './rawatJalan';
 import Pasien from './pasien';
+import Antrian from './antrian';
 
 const UnAuthenticated = <Otentifikasi />;
 
@@ -31,12 +32,16 @@ function App() {
     <Router>
       <div className="app font-sans">
         <Navigation />
-        <div className="display overflow-auto my-10">
+        <div className="display overflow-hidden my-10">
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route 
               path="/pendaftaran" 
-              element={<ProtectedRoute element={<Pendaftaran />} condition={role.role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
+              element={<ProtectedRoute element={<Pendaftaran />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
+            />
+            <Route 
+              path="/antrian" 
+              element={<ProtectedRoute element={<Antrian />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
             />
             <Route 
               path="/otentifikasi" 
@@ -44,19 +49,19 @@ function App() {
             />
             <Route 
               path="/RekamMedis" 
-              element={<ProtectedRoute element={<RekamMedis />} condition={role.role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
+              element={<ProtectedRoute element={<RekamMedis />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
             />
             <Route 
               path="/RawatInap" 
-              element={<ProtectedRoute element={<RawatInap />} condition={role.role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
+              element={<ProtectedRoute element={<RawatInap />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
             />
             <Route 
               path="/RawatJalan" 
-              element={<ProtectedRoute element={<RawatJalan />} condition={role.role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
+              element={<ProtectedRoute element={<RawatJalan />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
             />
             <Route 
               path="/Pasien" 
-              element={<ProtectedRoute element={<Pasien />} condition={role.role === 'dokter'} alertMessage="Access Denied: Anda Bukan Dokter." />} 
+              element={<ProtectedRoute element={<Pasien />} condition={role === 'dokter'} alertMessage="Access Denied: Anda Bukan Dokter." />} 
             />
           </Routes>
         </div>

@@ -28,7 +28,6 @@ db.connect((err) => {
 });
 
 // User Registration
-// Create Registration
 app.post('/pendaftaran', (req, res) => {
     let {
         pasien_id,
@@ -44,7 +43,6 @@ app.post('/pendaftaran', (req, res) => {
         tarif
     } = req.body;
 
-    // Validate dokter_id
     const parsedDokterId = parseInt(dokter_id, 10);
     if (isNaN(parsedDokterId)) {
         return res.status(400).json({ message: 'Invalid dokter_id' });
@@ -53,92 +51,87 @@ app.post('/pendaftaran', (req, res) => {
     const patientQuery = 'INSERT INTO pasien (nama_pasien, tanggal_lahir, jenis_kelamin, alamat, no_ktp, no_telepon) VALUES (?, ?, ?, ?, ?, ?)';
     const registrationQuery = 'INSERT INTO pendaftaran (pasien_id, poliklinik, dokter_id, tanggal_pendaftaran, tipe_pembayaran) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)';
 
-    console.log('Executing patientQuery with values:', [nama_pasien, tanggal_lahir, jenis_kelamin, alamat, no_ktp, no_telepon]);
     if (pasien_id === undefined) {
-        // First, insert patient data
         db.query(patientQuery, [nama_pasien, tanggal_lahir, jenis_kelamin, alamat, no_ktp, no_telepon], (err, patientResult) => {
             if (err) {
                 console.error('Error executing patient query:', err.stack);
                 res.status(500).send('Error executing patient query');
                 return;
             }
-
-            // Capture the inserted patient's ID
-
             pasien_id = patientResult.insertId;
-        })
+
+            // Now insert registration data
+            executeRegistrationQuery(pasien_id);
+        });
+    } else {
+        // If pasien_id is provided
+        executeRegistrationQuery(pasien_id);
     }
 
-    console.log('Patient inserted with ID:', pasien_id);
-    console.log('Executing registrationQuery with values:', [pasien_id, poliklinik, parsedDokterId, tipe_pembayaran]);
-
-    // Then, insert registration data
-    db.query(registrationQuery, [pasien_id, poliklinik, parsedDokterId, tipe_pembayaran], (err, registrationResult) => {
-        if (err) {
-            console.error('Error executing registration query:', err.stack);
-            res.status(500).send('Error executing registration query');
-            return;
-        }
-
-        console.log('Registration inserted with result:', registrationResult);
-
-        // Insert into rekam_medis table
-        const rekamMedisQuery = 'INSERT INTO rekam_medis (pasien_id, poliklinik_id, dokter_id, waktu_rekam) VALUES (?, ?, ?, CURRENT_TIMESTAMP)';
-        db.query(rekamMedisQuery, [pasien_id, poliklinik, parsedDokterId], (err, rekamMedisResult) => {
+    function executeRegistrationQuery(pasien_id) {
+        db.query(registrationQuery, [pasien_id, poliklinik, parsedDokterId, tipe_pembayaran], (err, registrationResult) => {
             if (err) {
-                console.error('Error executing rekam medis query:', err.stack);
-                res.status(500).send('Error executing rekam medis query');
+                console.error('Error executing registration query:', err.stack);
+                res.status(500).send('Error executing registration query');
                 return;
             }
 
-            console.log('Rekam medis inserted with result:', rekamMedisResult);
 
-            // Insert into antrian table
-            const antrianQuery = 'INSERT INTO antrian (poliklinik_id, pasien_id, tipe_pembayaran, tanggal, waktu) VALUES (?, ?, ?, CURRENT_DATE, CURRENT_TIME)';
-            db.query(antrianQuery, [poliklinik, pasien_id, tipe_pembayaran], (err, antrianResult) => {
+
+            const antrianQuery = 'INSERT INTO antrian (poliklinik_id,layanan_id, pasien_id, dokter_id, tipe_pembayaran, tanggal, waktu) VALUES (?,?,? ,?, ?, CURRENT_DATE, CURRENT_TIME)';
+            db.query(antrianQuery, [poliklinik,tarif, pasien_id, parsedDokterId, tipe_pembayaran], (err, antrianResult) => {
                 if (err) {
                     console.error('Error executing antrian query:', err.stack);
                     res.status(500).send('Error executing antrian query');
                     return;
                 }
 
-                console.log('Antrian inserted with result:', antrianResult);
-
-                const tarifQuery = 'INSERT INTO tarif_pasien (pasien_id,tarif_layanan_id) VALUES (?,?)'
-                db.query(tarifQuery, [pasien_id, tarif], (err, antrianResult) => {
-                res.json({
-                    message: 'Registration, rekam medis, and antrian created successfully',
-                    registration: {
-                        id: registrationResult.insertId,
-                        pasien_id: pasien_id,
-                        poliklinik: poliklinik,
-                        dokter_id: parsedDokterId,
-                        tipe_pembayaran: tipe_pembayaran,
-                        tanggal_pendaftaran: new Date()
-                    },
-                    rekamMedis: {
-                        id: rekamMedisResult.insertId,
-                        pasien_id: pasien_id,
-                        poliklinik_id: poliklinik,
-                        dokter_id: parsedDokterId,
-                        waktu_rekam: new Date()
-                    },
-                    antrian: {
-                        id: antrianResult.insertId,
-                        poliklinik_id: poliklinik,
-                        pasien_id: pasien_id,
-                        tipe_pembayaran: tipe_pembayaran,
-                        tanggal: new Date(),
-                        waktu: new Date()
+                const selectUrutanAntrianQuery = 'SELECT urutan_antrian FROM antrian WHERE antrian_id = ?';
+                db.query(selectUrutanAntrianQuery, [antrianResult.insertId], (err, urutanAntrianResult) => {
+                    if (err) {
+                        console.error('Error executing select urutan_antrian query:', err.stack);
+                        res.status(500).send('Error executing select urutan_antrian query');
+                        return;
                     }
+
+                    const urutan_antrian = urutanAntrianResult[0].urutan_antrian;
+
                     
-                    })
+
+
+
+                        res.json({
+                            message: 'Registration, rekam medis, and antrian created successfully',
+                            registration: {
+                                id: registrationResult.insertId,
+                                pasien_id: pasien_id,
+                                poliklinik: poliklinik,
+                                dokter_id: parsedDokterId,
+                                tipe_pembayaran: tipe_pembayaran,
+                                tanggal_pendaftaran: new Date()
+                            },
+                            antrian: {
+                                id: antrianResult.insertId,
+                                poliklinik_id: poliklinik,
+                                pasien_id: pasien_id,
+                                tipe_pembayaran: tipe_pembayaran,
+                                tanggal: new Date(),
+                                waktu: new Date(),
+                                urutan_antrian: urutan_antrian
+                            }
+                        });
+
+                    
                 });
             });
+
         });
-    });
+    }
 
 });
+
+
+
 
 app.post('/register', async (req, res) => {
     const { username, password, dokter_id, role } = req.body;
@@ -245,6 +238,17 @@ app.get('/rekamMedis', (req, res) => {
         res.json(results);
     });
 })
+app.get('/antrian', (req, res) => {
+    const query = 'SELECT * FROM antrian';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(results);
+    });
+})
 
 // Read doctors
 app.get('/dokter', (req, res) => {
@@ -338,6 +342,351 @@ app.get('/pasien', (req, res) => {
         res.json(result);
     });
 });
+
+app.get('/rawatJalan', (req, res) => {
+    const query = 'SELECT * FROM rawat_jalan';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/rawatInap', (req, res) => {
+    const query = 'SELECT * FROM rawat_inap';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/layanan', (req, res) => {
+    const query = 'SELECT * FROM layanan';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/gelang', (req, res) => {
+    const query = 'SELECT * FROM gelang';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/tarif', (req, res) => {
+    const query = 'SELECT * FROM tarif_pasien';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+
+app.get('/obat', (req, res) => {
+    const query = 'SELECT * FROM obat';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/resep', (req, res) => {
+    const query = 'SELECT * FROM resep';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+app.get('/kamar', (req, res) => {
+    const query = 'SELECT * FROM kamar';
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.json(result);
+    })
+})
+
+app.put('/nextAntrian', (req, res) => {
+    const {
+        antrianId,
+        poliId,
+        pasienId,
+        dokterId,
+        layananId
+    } = req.body;
+
+    // Update antrian to mark as finished
+    const updateAntrianQuery = 'UPDATE antrian SET selesai = ? WHERE antrian_id = ?';
+    db.query(updateAntrianQuery, ['sudah', antrianId], (err, result) => {
+        if (err) {
+            console.error('Error executing update antrian query:', err.stack);
+            return res.status(500).send('Error executing update antrian query');
+        }
+
+        // Insert new rekam medis record
+        const rekamMedisQuery = 'INSERT INTO rekam_medis (pasien_id, poliklinik_id, dokter_id, waktu_rekam, jenis_rawat) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)';
+        db.query(rekamMedisQuery, [pasienId, poliId, dokterId, 'rawat jalan'], (err, rekamMedisResult) => {
+            if (err) {
+                console.error('Error executing rekam medis query:', err.stack);
+                return res.status(500).send('Error executing rekam medis query');
+            }
+
+            // Insert new rawat jalan record using the inserted rekam medis ID
+            const rawatJalanQuery = 'INSERT INTO rawat_jalan (rekam_medis_id, tanggal_kunjungan) VALUES (?, CURRENT_DATE)';
+            db.query(rawatJalanQuery, [rekamMedisResult.insertId], (err, rawatJalanResult) => {
+                if (err) {
+                    console.error('Error executing rawat jalan query:', err.stack);
+                    return res.status(500).send('Error executing rawat jalan query');
+                }
+
+                const tarifQuery = 'INSERT INTO tarif_pasien (pasien_id,rekam_medis_id,layanan_id) VALUES (?,?,?)';
+                    db.query(tarifQuery, [pasienId,rekamMedisResult.insertId,layananId], (err, tarifResult) => {
+                        if (err) {
+                            console.error('Error executing tarif query:', err.stack);
+                            res.status(500).send('Error executing tarif query');
+                            return;
+                        }
+                // Send success response after all queries succeed
+                res.status(200).send('Antrian updated and records inserted successfully');
+                    })
+            });
+        });
+    });
+});
+
+
+app.put('/skipAntrian', (req, res) => {
+    const {
+        antrianId,
+
+    } = req.body
+    const query = 'UPDATE antrian SET selesai = ? WHERE antrian_id = ?';
+    db.query(query, ['skip', antrianId], (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            res.status(500).send('Error executing query');
+            return;
+        }
+        res.status(200);
+    })
+})
+ 
+app.put('/rawatJalanUpdate', (req, res) => {
+    const {
+        currentRekam,
+        activeRow,
+        tanggalKunjungan,
+        namaDokter,
+        poliklinik,
+        diagnosis,
+        tindakan,
+        catatan,
+        resep,
+        deletedResep,
+        layanans,
+        deletedLayanans
+    } = req.body;
+
+    console.log(req.body);
+
+    const waterfall = new Promise((resolve, reject) => {
+        if (resep.length > 0) {
+            const queryResep = 'INSERT INTO resep (pasien_id, rekam_medis_id,obat_id, jumlah, dosis) VALUES ?';
+            const resepValues = resep.map(medicine => [medicine.pasien_id, medicine.rekam_medis_id, medicine.obat_id, medicine.jumlah, medicine.dosis]);
+            console.log(resepValues);
+            db.query(queryResep, [resepValues], (err, result) => {
+                if (err) {
+                    console.error('Error executing query:', err);
+                    return reject('Error inserting resep data');
+                }
+                resolve();
+            });
+        } else {
+            resolve();
+        }
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+            if (layanans.length > 0) {
+                const queryLayanan = 'INSERT INTO tarif_pasien (pasien_id,rekam_medis_id, layanan_id) VALUES ?';
+                const layananPasienValues = layanans.map(layanan => [layanan.layananPasien,layanan.rekam_medis_id, layanan.tarif_id]);
+                console.log(layananPasienValues);
+                db.query(queryLayanan, [layananPasienValues], (err, result) => {
+                    if (err) {
+                        console.error('Error executing query:', err);
+                        return reject('Error inserting layanan data');
+                    }
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+            if (deletedResep.length > 0) {
+                const queryDeleteResep = 'DELETE FROM resep WHERE resep_id IN (?)';
+                const resepDeletedValues = deletedResep.map(deletedres => [deletedres]);
+                console.log(resepDeletedValues);
+                db.query(queryDeleteResep, [resepDeletedValues], (err, result) => {
+                    if (err) {
+                        console.error('Error executing query:', err);
+                        return reject('Error deleting resep data');
+                    }
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+            if (deletedLayanans.length > 0) {
+                const queryDeleteLayanan = 'DELETE FROM tarif_pasien WHERE tarif_pasien_id IN (?)';
+                const layananDeletedValues = deletedLayanans.map(deletedlay => [deletedlay]);
+                db.query(queryDeleteLayanan, [layananDeletedValues], (err, result) => {
+                    if (err) {
+                        console.error('Error executing query:', err);
+                        return reject('Error deleting layanan data');
+                    }
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+            if (tanggalKunjungan !== '') {
+                db.query('UPDATE rawat_jalan SET tanggal_kunjungan = ? WHERE rawat_jalan_id = ?', [tanggalKunjungan, activeRow], (err, results) => {
+                    if (err) {
+                        console.log(err);
+                        return reject('Error updating tanggal_kunjungan');
+                    }
+                    console.log('tanggal');
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+            let dokter_id = namaDokter;
+            let poliklinik_id = poliklinik;
+            let tindakan_medis = tindakan;
+            let catatan_perkembangan = catatan;
+
+            const fieldsToUpdate = {
+                dokter_id,
+                poliklinik_id,
+                diagnosis,
+                tindakan_medis,
+                catatan_perkembangan,
+            };
+            const setClause = [];
+            const values = [];
+
+            for (const [key, value] of Object.entries(fieldsToUpdate)) {
+                if (value !== undefined && value !== '' && value !== null) {
+                    setClause.push(`${key} = ?`);
+                    values.push(value);
+                }
+            }
+
+            if (setClause.length > 0 && values.length > 0) {
+                const sql = `UPDATE rekam_medis SET ${setClause.join(', ')} WHERE rekam_medis_id = ?`;
+                values.push(currentRekam);
+                db.query(sql, values, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                        return reject('Error updating rekam_medis');
+                    }
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }).then(() => {
+        res.json({ message: 'All operations completed successfully' });
+    }).catch(error => {
+        res.status(500).send(error);
+    });
+});
+
+app.post('/switchRawat', (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
+        res.status(400).send('ID is required');
+        return;
+    }
+
+    // Query to get the row with the specified ID
+    const selectQuery = 'SELECT * FROM your_table WHERE id = ?';
+
+    connection.query(selectQuery, [id], (err, results) => {
+        if (err) {
+            console.error('Error fetching the row:', err);
+            res.status(500).send('Error fetching the row');
+            return;
+        }
+
+        if (results.length === 0) {
+            res.status(404).send('Row not found');
+            return;
+        }
+
+        // Get the row data
+        const row = results[0];
+
+        // Prepare the data for the new row (excluding the 'id' if it's auto-incremented)
+        const newRow = { ...row };
+        delete newRow.id;
+
+        // Query to insert the new row
+        const insertQuery = 'INSERT INTO your_table SET ?';
+
+        connection.query(insertQuery, newRow, (err, results) => {
+            if (err) {
+                console.error('Error inserting the new row:', err);
+                res.status(500).send('Error inserting the new row');
+                return;
+            }
+
+            res.send(`New row inserted with ID: ${results.insertId}`);
+        });
+    });
+});
+
+
 
 // Start the Express server
 app.listen(port, () => {
