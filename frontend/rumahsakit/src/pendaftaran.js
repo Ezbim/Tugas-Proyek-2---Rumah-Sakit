@@ -350,7 +350,7 @@ function Pendaftaran() {
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center"
                                     
                                 >
-                                    <div className='p-5 bg-white min-w-96 h-52 relative'
+                                    <div className='shadow-md p-4 bg-white min-w-96 h-52 relative rounded-lg'
                                         ref={boxRef}
                                         tabIndex={-1}
                                         onBlur={handleBlur}
@@ -374,17 +374,19 @@ function Pendaftaran() {
                                             </svg>
                                             <p className='text-xl'>RS UPAYA SEHAT</p>
                                         </div>
-                                        <div className='flex items-center p-4 w-full'>
-                                            <div className="p-2 w-28 h-28 bg-gray-400"></div>
+                                        <div className='flex items-center p-4 w-96'>
+                                            <div className="p-2 w-28 h-28 border-2 border-black mr-4 rounded-lg ">
+                                                <img src="https://cdn2.iconfinder.com/data/icons/e-commerce-line-4-1/1024/user4-512.png" alt="" />
+                                            </div>
                                             <div>
                                                 <div className="p-2">
                                                     ID Pasien : {registrationData.registration.pasien_id}
                                                 </div>
                                                 <div className="p-2">
-                                                    Nama Pasien : {registrationData.registration.pasien_id}
+                                                    Nama Pasien : {pasienDat.find(r=> r.pasien_id === registrationData.registration.pasien_id)?.nama_pasien}
                                                 </div>
                                                 <div className="p-2">
-                                                    Jenis Kelamin : {registrationData.registration.pasien_id}
+                                                    Jenis Kelamin : {pasienDat.find(r=> r.pasien_id === registrationData.registration.pasien_id)?.jenis_kelamin}
                                                 </div>
                                             </div>
                                         </div>

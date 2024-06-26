@@ -99,7 +99,7 @@ const RawatJalan = () => {
         setTindakan('')
         setCatatan('')
         setTanggalKunjungan('')
-
+        setJenisRawat(true)
         setActiveRow(null)
     }
 
