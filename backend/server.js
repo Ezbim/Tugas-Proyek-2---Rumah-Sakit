@@ -79,7 +79,7 @@ app.post('/pendaftaran', (req, res) => {
 
 
             const antrianQuery = 'INSERT INTO antrian (poliklinik_id,layanan_id, pasien_id, dokter_id, tipe_pembayaran, tanggal, waktu) VALUES (?,?,? ,?, ?, CURRENT_DATE, CURRENT_TIME)';
-            db.query(antrianQuery, [poliklinik,tarif, pasien_id, parsedDokterId, tipe_pembayaran], (err, antrianResult) => {
+            db.query(antrianQuery, [poliklinik, tarif, pasien_id, parsedDokterId, tipe_pembayaran], (err, antrianResult) => {
                 if (err) {
                     console.error('Error executing antrian query:', err.stack);
                     res.status(500).send('Error executing antrian query');
@@ -96,32 +96,32 @@ app.post('/pendaftaran', (req, res) => {
 
                     const urutan_antrian = urutanAntrianResult[0].urutan_antrian;
 
-                    
 
 
 
-                        res.json({
-                            message: 'Registration, rekam medis, and antrian created successfully',
-                            registration: {
-                                id: registrationResult.insertId,
-                                pasien_id: pasien_id,
-                                poliklinik: poliklinik,
-                                dokter_id: parsedDokterId,
-                                tipe_pembayaran: tipe_pembayaran,
-                                tanggal_pendaftaran: new Date()
-                            },
-                            antrian: {
-                                id: antrianResult.insertId,
-                                poliklinik_id: poliklinik,
-                                pasien_id: pasien_id,
-                                tipe_pembayaran: tipe_pembayaran,
-                                tanggal: new Date(),
-                                waktu: new Date(),
-                                urutan_antrian: urutan_antrian
-                            }
-                        });
 
-                    
+                    res.json({
+                        message: 'Registration, rekam medis, and antrian created successfully',
+                        registration: {
+                            id: registrationResult.insertId,
+                            pasien_id: pasien_id,
+                            poliklinik: poliklinik,
+                            dokter_id: parsedDokterId,
+                            tipe_pembayaran: tipe_pembayaran,
+                            tanggal_pendaftaran: new Date()
+                        },
+                        antrian: {
+                            id: antrianResult.insertId,
+                            poliklinik_id: poliklinik,
+                            pasien_id: pasien_id,
+                            tipe_pembayaran: tipe_pembayaran,
+                            tanggal: new Date(),
+                            waktu: new Date(),
+                            urutan_antrian: urutan_antrian
+                        }
+                    });
+
+
                 });
             });
 
@@ -467,15 +467,15 @@ app.put('/nextAntrian', (req, res) => {
                 }
 
                 const tarifQuery = 'INSERT INTO tarif_pasien (pasien_id,rekam_medis_id,layanan_id) VALUES (?,?,?)';
-                    db.query(tarifQuery, [pasienId,rekamMedisResult.insertId,layananId], (err, tarifResult) => {
-                        if (err) {
-                            console.error('Error executing tarif query:', err.stack);
-                            res.status(500).send('Error executing tarif query');
-                            return;
-                        }
-                // Send success response after all queries succeed
-                res.status(200).send('Antrian updated and records inserted successfully');
-                    })
+                db.query(tarifQuery, [pasienId, rekamMedisResult.insertId, layananId], (err, tarifResult) => {
+                    if (err) {
+                        console.error('Error executing tarif query:', err.stack);
+                        res.status(500).send('Error executing tarif query');
+                        return;
+                    }
+                    // Send success response after all queries succeed
+                    res.status(200).send('Antrian updated and records inserted successfully');
+                })
             });
         });
     });
@@ -497,10 +497,12 @@ app.put('/skipAntrian', (req, res) => {
         res.status(200);
     })
 })
- 
+
 app.put('/rawatJalanUpdate', (req, res) => {
     const {
         currentRekam,
+        jenisRawat,
+
         activeRow,
         tanggalKunjungan,
         namaDokter,
@@ -535,7 +537,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
         return new Promise((resolve, reject) => {
             if (layanans.length > 0) {
                 const queryLayanan = 'INSERT INTO tarif_pasien (pasien_id,rekam_medis_id, layanan_id) VALUES ?';
-                const layananPasienValues = layanans.map(layanan => [layanan.layananPasien,layanan.rekam_medis_id, layanan.tarif_id]);
+                const layananPasienValues = layanans.map(layanan => [layanan.layananPasien, layanan.rekam_medis_id, layanan.tarif_id]);
                 console.log(layananPasienValues);
                 db.query(queryLayanan, [layananPasienValues], (err, result) => {
                     if (err) {
@@ -635,6 +637,77 @@ app.put('/rawatJalanUpdate', (req, res) => {
             }
         });
     }).then(() => {
+        return new Promise((resolve, reject) => {
+
+            if (!jenisRawat) {
+                const selectQuery = 'SELECT * FROM rekam_medis WHERE rekam_medis_id = ?';
+
+                db.query(selectQuery, [currentRekam], (err, results) => {
+                    if (err) {
+                        console.error('Error fetching the row:', err);
+                        res.status(500).send('Error fetching the row');
+                        return;
+                    }
+
+                    if (results.length === 0) {
+                        res.status(404).send('Row not found');
+                        return;
+                    }
+
+                    // Get the row data
+                    const row = results[0];
+                    row.jenis_rawat = 'rawat inap'
+                    // Prepare the data for the new row (excluding the 'id' if it's auto-incremented)
+
+                    delete row.rekam_medis_id;
+
+                    // Query to insert the new row
+                    const insertQuery = 'INSERT INTO rekam_medis SET ?';
+
+                    db.query(insertQuery, row, (err, inresults) => {
+                        if (err) {
+                            console.error('Error inserting the new row:', err);
+                            res.status(500).send('Error inserting the new row');
+                            return;
+                        }
+
+
+                        const insertRekamQuery = 'INSERT INTO rawat_inap (rekam_medis_id, tanggal_masuk) VALUES (?, CURRENT_DATE)'
+                        db.query(insertRekamQuery, [inresults.insertId], (err, results) => {
+                            if (err) {
+                                console.error('Error inserting the new row:', err);
+                                res.status(500).send('Error inserting the new row');
+                                return;
+                            }
+
+                            const deleteRawat = 'DELETE FROM rawat_jalan WHERE rawat_jalan_id = ?'
+                            db.query(deleteRawat, [activeRow], (err, results) => {
+                                if (err) {
+                                    console.error('Error inserting the new row:', err);
+                                    res.status(500).send('Error inserting the new row');
+                                    return;
+                                }
+                                resolve()
+                            })
+                        })
+                        /*  delRekam = 'DELETE FROM rekam_medis WHERE rekam_medis_id = ? '
+                         db.query(delRekam, rekamId, (err, results) => {
+                             if (err) {
+                                 console.error('Error inserting the new row:', err);
+                                 res.status(500).send('Error inserting the new row');
+                                 return;
+                             }
+                             resolve()
+                         }) */
+                    });
+                });
+            } else if (jenisRawat) {
+                resolve()
+            } else {
+                resolve()
+            }
+        })
+    }).then(() => {
         res.json({ message: 'All operations completed successfully' });
     }).catch(error => {
         res.status(500).send(error);
@@ -642,17 +715,20 @@ app.put('/rawatJalanUpdate', (req, res) => {
 });
 
 app.post('/switchRawat', (req, res) => {
-    const { id } = req.body;
+    const {
+        rekamId,
+        activeRow
+    } = req.body;
 
-    if (!id) {
+    if (!rekamId) {
         res.status(400).send('ID is required');
         return;
     }
 
     // Query to get the row with the specified ID
-    const selectQuery = 'SELECT * FROM your_table WHERE id = ?';
+    const selectQuery = 'SELECT * FROM rekam_medis WHERE rekam_medis_id = ?';
 
-    connection.query(selectQuery, [id], (err, results) => {
+    db.query(selectQuery, [rekamId], (err, results) => {
         if (err) {
             console.error('Error fetching the row:', err);
             res.status(500).send('Error fetching the row');
@@ -672,9 +748,9 @@ app.post('/switchRawat', (req, res) => {
         delete newRow.id;
 
         // Query to insert the new row
-        const insertQuery = 'INSERT INTO your_table SET ?';
+        const insertQuery = 'INSERT INTO rekam_medis SET ?';
 
-        connection.query(insertQuery, newRow, (err, results) => {
+        db.query(insertQuery, newRow, (err, results) => {
             if (err) {
                 console.error('Error inserting the new row:', err);
                 res.status(500).send('Error inserting the new row');

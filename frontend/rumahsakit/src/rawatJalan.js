@@ -209,7 +209,7 @@ const RawatJalan = () => {
     const [failed, setFailed] = useState(false)
 
 
-
+    
 
     const handleSubmit = async (e, rawatJalan) => {
         e.preventDefault();
@@ -217,14 +217,18 @@ const RawatJalan = () => {
         const currentRekam = rawatJalan.rekam_medis_id;
         console.log('current : ', currentRekam, resep);
 
-        if (jenisRawat) {
+    
             try {
+
+             
                 const response = await fetch('http://localhost:3000/rawatJalanUpdate', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
+                      
+                        jenisRawat,
                         currentRekam,
                         activeRow,
                         tanggalKunjungan,
@@ -253,9 +257,7 @@ const RawatJalan = () => {
                 setFailed(true)
                 console.error('Fetch error:', error);
             }
-        } else if (!jenisRawat) {
-            
-        }
+      
     };
 
     useEffect(() => {

@@ -114,7 +114,7 @@ const RekamMedis = () => {
         setCurrentDate(formattedDate);
     };
 
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
     const boxRef = useRef(null);
 
     const handleToggle = () => {
@@ -198,7 +198,7 @@ const RekamMedis = () => {
 
 
                                                         {rekamData.map((r) => (
-                                                            activePasien === rekamData[r.rekam_medis_id - 1]?.pasien_id && (
+                                                            activePasien === r.rekam_medis_id&& (
 
 
 
