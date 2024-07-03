@@ -99,7 +99,7 @@ const RawatJalan = () => {
         setTindakan('')
         setCatatan('')
         setTanggalKunjungan('')
-        setJenisRawat(true)
+        setJenisRawat(false)
         setActiveRow(null)
     }
 
@@ -121,7 +121,7 @@ const RawatJalan = () => {
     const [tanggalKunjungan, setTanggalKunjungan] = useState('')
     const [namaDokter, setNamaDokter] = useState('')
     const [poliklinik, setPoliklinik] = useState('')
-    const [jenisRawat, setJenisRawat] = useState(true)
+    const [jenisRawat, setJenisRawat] = useState(false)
     const [diagnosis, setDiagnosis] = useState('')
     const [tindakan, setTindakan] = useState('')
     const [catatan, setCatatan] = useState('')
@@ -155,10 +155,10 @@ const RawatJalan = () => {
     };
     const handleAddObat = (e, rawatJalan) => {
         e.preventDefault();
-        const pasien_id = pasienData[rekamData[rawatJalan.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id;
+        const pasien_id = rekamData.find(rK => rK.rekam_medis_id === rawatJalan.rekam_medis_id)?.pasien_id
         const rekam_medis_id = rawatJalan.rekam_medis_id;
-        if (pasien_id && rekam_medis_id &&obat_id && jumlah && dosis) {
-            const newObat = { pasien_id,rekam_medis_id, obat_id, jumlah, dosis };
+        if (pasien_id && rekam_medis_id && obat_id && jumlah && dosis) {
+            const newObat = { pasien_id, rekam_medis_id, obat_id, jumlah, dosis };
             setResep(prevResep => [...prevResep, newObat]);
         }
     }
@@ -192,9 +192,9 @@ const RawatJalan = () => {
     const handleAddLayanan = (e, rawatJalan) => {
         e.preventDefault();
 
-        const layananPasien = pasienData[rekamData[rawatJalan.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id;
+        const layananPasien = rekamData.find(rK => rK.rekam_medis_id === rawatJalan.rekam_medis_id)?.pasien_id;
         const rekam_medis_id = rawatJalan.rekam_medis_id;
-        const newLayanan = { layananPasien, rekam_medis_id ,tarif_id };
+        const newLayanan = { layananPasien, rekam_medis_id, tarif_id };
         setLayanans([...layanans, newLayanan])
 
     }
@@ -209,55 +209,60 @@ const RawatJalan = () => {
     const [failed, setFailed] = useState(false)
 
 
-    
+const currentPage = 'rawat_jalan'
 
     const handleSubmit = async (e, rawatJalan) => {
         e.preventDefault();
 
         const currentRekam = rawatJalan.rekam_medis_id;
+        const jenisKelamin = pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id ===rawatJalan.rekam_medis_id)?.pasien_id)?.jenis_kelamin;
+        
+        const jenisGelang = jenisKelamin === 'Laki-laki' ? 3 : 4;
         console.log('current : ', currentRekam, resep);
 
-    
-            try {
 
-             
-                const response = await fetch('http://localhost:3000/rawatJalanUpdate', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      
-                        jenisRawat,
-                        currentRekam,
-                        activeRow,
-                        tanggalKunjungan,
-                        namaDokter,
-                        poliklinik,
-                        diagnosis,
-                        tindakan,
-                        catatan,
-                        resep,
-                        deletedResep,
-                        layanans,
-                        deletedLayanans
-                    }),
-                });
+        try {
 
-                console.log(response.status);
 
-                if (response.ok) {
-                    resetInput();
-                    setSucces(true)
-                    { toggleRefetch === 0 ? setToggleRefetch(1) : setToggleRefetch(0) }
-                }
-                const data = await response.json();
-                console.log(data);
-            } catch (error) {
-                setFailed(true)
-                console.error('Fetch error:', error);
+            const response = await fetch('http://localhost:3000/rawatJalanUpdate', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    jenisGelang,
+                    currentPage,
+                    jenisRawat,
+                    currentRekam,
+                    activePasien,
+                    activeRow,
+                    tanggalKunjungan,
+                    namaDokter,
+                    poliklinik,
+                    diagnosis,
+                    tindakan,
+                    catatan,
+                    resep,
+                    deletedResep,
+                    layanans,
+                    deletedLayanans
+                }),
+            });
+
+            console.log(response.status);
+
+            if (response.ok) {
+                resetInput();
+                setSucces(true)
+                { toggleRefetch === 0 ? setToggleRefetch(1) : setToggleRefetch(0) }
             }
-      
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            setFailed(true)
+            console.error('Fetch error:', error);
+        }
+
     };
 
     useEffect(() => {
@@ -345,8 +350,13 @@ const RawatJalan = () => {
 
     function formatNumber(value) {
         return new Intl.NumberFormat('en-US').format(value);
-      }
-      
+    }
+
+    const changeDokter = (id) =>{
+
+        setNamaDokter(id)
+        setPoliklinik(dokter.find(d=> d.dokter_id == id)?.poliklinik_id)
+    }
 
     return (
         <div className="flex flex-col items-center max-w-4xl mx-auto p-4 rounded-xl shadow-md my-2 text-sm sm:text-lg">
@@ -374,42 +384,42 @@ const RawatJalan = () => {
                         .map((rJ, index) => (
                             <>
                                 <tr
-                                    key={rekamData[rJ.rekam_medis_id]?.pasien_id}
+                                    key={ rekamData.find(rkD => rkD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id}
                                     className="hover:bg-gray-50 cursor-pointer"
                                     /* onClick={() => handleRowClick(rawatJalan.rawat_jalan_id)} */
                                     onClick={() => handlePasienClick(rekamData.find(r => r.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)}
                                 >
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rekamData.find(r => r.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id}</td>
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}</td>
+                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData.find(p => p.pasien_id === rekamData.find(rD=> rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                     <td className="border border-gray-300 sm:px-4 px-auto py-2 text-center">
-                     
-                                            {rawatJalan
-                                                .filter((rawat) => rekamData[rawat.rekam_medis_id - 1]?.pasien_id === rekamData[rJ.rekam_medis_id - 1]?.pasien_id)
-                                                .slice(0, 1) // Limit to only the first item
-                                                .map((rr, index) => (
-                                                   
-                                                        rekamData[rr.rekam_medis_id - 1]?.waktu_rekam === null ? '-' : formatDate(rekamData[rr.rekam_medis_id - 1]?.waktu_rekam)
-                                                
-                                                )).join(', ')
-                                            }
-                                    
+
+                                        {rawatJalan
+                                            .filter((rawat) => rekamData[rawat.rekam_medis_id - 1]?.pasien_id === rekamData[rJ.rekam_medis_id - 1]?.pasien_id)
+                                            .slice(0, 1) // Limit to only the first item
+                                            .map((rr, index) => (
+
+                                                rr.tanggal_kunjungan === null ? '-' : formatDate(rr.tanggal_kunjungan)
+
+                                            )).join(', ')
+                                        }
+
                                     </td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{dokter[rekamData[rJ.rekam_medis_id - 1]?.dokter_id - 1]?.nama_dokter}</td>
 
                                     <td className="border border-gray-300 sm:px-4 px-auto py-2 text-center">
                                         <ul className="mx-8">
                                             {rawatJalan
-                                            .filter((rawat) => rekamData[rawat.rekam_medis_id - 1]?.pasien_id === rekamData[rJ.rekam_medis_id - 1]?.pasien_id)
-                                            .map((rr) => (
-                                                <li className="text-start">
-                                                    {rekamData[rr.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[rr.rekam_medis_id - 1]?.diagnosis}
-                                                </li>
-                                                
-                                            ))
-                                           
-                                        }
+                                                .filter((rawat) => rekamData[rawat.rekam_medis_id - 1]?.pasien_id === rekamData[rJ.rekam_medis_id - 1]?.pasien_id)
+                                                .map((rr) => (
+                                                    <li className="text-start">
+                                                        {rekamData[rr.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[rr.rekam_medis_id - 1]?.diagnosis}
+                                                    </li>
+
+                                                ))
+
+                                            }
                                         </ul>
-                                        
+
                                     </td>
 
 
@@ -418,22 +428,22 @@ const RawatJalan = () => {
 
 
                                 </tr>
-                                {activePasien === rekamData[rJ.rekam_medis_id - 1]?.pasien_id && (
+                                {activePasien === rekamData.find(rkD => rkD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id && (
                                     <>
                                         <tr >
                                             <td className="bg-gray-100 px-4 p-5" colSpan="5">
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-48 ">Nama </div>:
-                                                    <div className="px-4">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}</div>
+                                                    <div className="px-4">{pasienData.find(p => p.pasien_id === rekamData.find(rD=> rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-48">Tanggal Lahir</div>:
-                                                    <div className="px-4">{formatDate(pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.tanggal_lahir)}</div>
+                                                    <div className="px-4">{formatDate(pasienData.find(p => p.pasien_id === rekamData.find(rD=> rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.tanggal_lahir)}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-48">Jenis Kelamin</div>:
-                                                    <div className=" px-4">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.jenis_kelamin}</div>
+                                                    <div className=" px-4">{pasienData.find(p => p.pasien_id === rekamData.find(rD=> rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.jenis}</div>
                                                 </div>
 
                                                 <div className=" flex mb-2 flex-col " >
@@ -465,7 +475,7 @@ const RawatJalan = () => {
                                                     <td colSpan="5" className="border border-gray-300 sm:px-4  px-auto py-2">
                                                         <div className="bg-gray-100 p-4 transform  ">
                                                             <div className="flex items-center my-5 justify-between">
-                                                                <div className="flex">
+                                                                <div className="flex items-center">
                                                                     <svg className="mx-1" width="20" height="20" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                         <path d="M21.8907 30V27.8571C21.8907 27.5757 21.8437 27.2971 21.7524 27.037C21.6611 26.7772 21.5273 26.5409 21.3587 26.3418C21.1899 26.1428 20.9897 25.985 20.7694 25.8774C20.549 25.7697 20.3128 25.7142 20.0742 25.7142H12.8081C10.3994 25.7142 8.08932 24.5854 6.38607 22.5761C4.68285 20.5668 3.72597 17.8416 3.72593 15C3.72593 13.593 3.96085 12.1997 4.41727 10.8998C4.8737 9.59988 5.54269 8.41875 6.38605 7.42382C7.22941 6.42891 8.23061 5.63973 9.33251 5.10129C10.4344 4.56285 11.6154 4.28574 12.8081 4.28576H20.0737C20.3122 4.28584 20.5486 4.23048 20.769 4.12283C20.9894 4.01518 21.1898 3.85735 21.3584 3.65836C21.5272 3.45935 21.661 3.22309 21.7524 2.96307C21.8437 2.70304 21.8907 2.42434 21.8907 2.14288V0H12.8085C11.1388 -1.13057e-10 9.48538 0.387988 7.94274 1.14181C6.40011 1.89563 4.99844 3.00053 3.81777 4.3934C2.63709 5.78629 1.70053 7.43988 1.06156 9.25977C0.422596 11.0796 0.0937321 13.0302 0.09375 15C0.09375 18.9782 1.43333 22.7935 3.8178 25.6066C6.20228 28.4196 9.43633 30 12.8085 30H21.8907Z" fill="url(#paint0_linear_27_808)" />
                                                                         <path d="M7.35883 15C7.35883 16.705 7.93292 18.34 8.95482 19.5455C9.9767 20.7511 11.3627 21.4283 12.8078 21.4283H21.8907C22.8542 21.4283 23.7781 21.8799 24.4594 22.6836C25.1406 23.4873 25.5234 24.5774 25.5234 25.7141V29.9998H29.1563V25.7142C29.1563 23.441 28.3908 21.2609 27.0283 19.6533C25.6656 18.0459 23.8176 17.1429 21.8907 17.1429H12.8081C12.3264 17.1429 11.8644 16.9171 11.5237 16.5153C11.1831 16.1134 10.9917 15.5683 10.9917 15C10.9917 14.4317 11.1831 13.8866 11.5237 13.4848C11.8644 13.0829 12.3264 12.8571 12.8081 12.8571H21.8907C23.8176 12.8571 25.6656 11.9541 27.0283 10.3466C28.3908 8.73919 29.1563 6.55902 29.1563 4.28576V0H25.5229V4.28576C25.5229 5.42226 25.1402 6.51223 24.4591 7.31591C23.778 8.11959 22.8541 8.57118 21.8907 8.57136H12.8081C12.0925 8.57131 11.3839 8.73757 10.7227 9.06062C10.0616 9.38368 9.46083 9.85722 8.95482 10.4542C8.44879 11.0511 8.04741 11.7598 7.77356 12.5398C7.49972 13.3198 7.3588 14.1558 7.35883 15Z" fill="url(#paint1_linear_27_808)" />
@@ -482,7 +492,10 @@ const RawatJalan = () => {
                                                                     </svg>
                                                                     <p>RS UPAYA SEHAT </p>
                                                                 </div>
-                                                                <p className="mr-10">Kode RM : {r.rekam_medis_id}</p>
+                                                                <div className="flex">
+                                                                    <p className="mr-4 border border-black rounded-lg p-2">ID Rawat Jalan : {r.rawat_jalan_id}</p>
+                                                                    <p className="mr-4 border border-black rounded-lg p-2">ID RM : {r.rekam_medis_id}</p>
+                                                                </div>
                                                             </div>
                                                             {/* form data*/}
                                                             <form >
@@ -490,7 +503,7 @@ const RawatJalan = () => {
                                                                     <tr>
                                                                         <td className="border p-2 border-gray-400 w-1/4">Nama pasien : </td>
                                                                         <td className="border  border-gray-400 p-2" >
-                                                                            {pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}
+                                                                        {pasienData.find(p => p.pasien_id === rekamData.find(rD=> rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}
                                                                         </td>
 
                                                                     </tr>
@@ -505,9 +518,13 @@ const RawatJalan = () => {
                                                                     <tr >
                                                                         <td className="border p-2 border-gray-400 w-1/4">Jenis Rawat : </td>
                                                                         <td className="border  border-gray-400" >
-                                                                            <select name="jenis_rawat" className="p-2 border w-full h-12" onChange={(e) => { setJenisRawat(!jenisRawat) }} defaultValue={jenisRawat}>
-                                                                                <option value='rawat jalan'> Rawat Jalan</option>
-                                                                                <option value='rawat inap'> Rawat Inap</option>
+                                                                            <select name="jenis_rawat" className="p-2 border w-full h-12" onChange={(e) => {
+                                                                                const value = e.target.value === 'true';
+                                                                                setJenisRawat(value);
+                                                                            }} defaultValue={jenisRawat}>
+
+                                                                                <option value="false">Rawat Jalan</option>
+                                                                                <option value="true">Rawat Inap</option>
                                                                             </select>
                                                                         </td>
                                                                     </tr>
@@ -534,7 +551,7 @@ const RawatJalan = () => {
                                                                         <td className="border p-2 border-gray-400 w-1/4">Nama dokter : </td>
 
                                                                         <td className="border  border-gray-400" >
-                                                                            <select name="nama_dokter" className="h-10 w-full pl-2" defaultValue={rekamData[r.rekam_medis_id - 1]?.dokter_id} onChange={(e) => { setNamaDokter(Number(e.target.value)) }} >
+                                                                            <select name="nama_dokter" className="h-10 w-full pl-2" defaultValue={rekamData[r.rekam_medis_id - 1]?.dokter_id} onChange={(e) => { changeDokter(Number(e.target.value)) }} >
                                                                                 {dokter
                                                                                     .filter(dokter =>
                                                                                         poliklinik !== ''
@@ -630,7 +647,7 @@ const RawatJalan = () => {
                                                                             <td className="border p-2 border-gray-400 font-bold " colSpan="3">Total Harga</td>
                                                                             <td className="border text-end border-gray-400 font-bold pr-5" >
                                                                                 {formatNumber(resepData
-                                                                                    .filter(resepDataItem => resepDataItem.rekam_medis_id === r.rekam_medis_id )
+                                                                                    .filter(resepDataItem => resepDataItem.rekam_medis_id === r.rekam_medis_id)
                                                                                     .reduce((sum, resepDataItem) => sum + resepDataItem.harga, 0) +
                                                                                     resep.reduce((sum, resepId) => sum + (obat[resepId.obat_id - 1]?.harga * resep.find(r => r.obat_id === resepId.obat_id).jumlah), 0))}
                                                                             </td>
@@ -657,8 +674,8 @@ const RawatJalan = () => {
                                                                     </thead>
                                                                     <tbody >
                                                                         {tarif.map((tarifData, index) => (
-                                                                            tarifData.rekam_medis_id === r.rekam_medis_id && (
-                                                                                <tr key={index} className="relative" >
+                                                                            tarifData.rekam_medis_id === r.rekam_medis_id && tarifData.layanan_id !== null && (
+                                                                                <tr key={tarifData.tarif_pasien_id} className="relative" >
                                                                                     <td className="border p-2 border-gray-400 w-2/5">{dataLayanan[tarifData.layanan_id - 1]?.nama_layanan}</td>
                                                                                     <td className="border text-end mr-10 border-gray-400 w-2/4 pr-5">{formatNumber(dataLayanan[tarifData.layanan_id - 1]?.harga)}</td>
                                                                                     <button onClick={(e) => removeItemById(e, tarifData)} id="tarif" className="mx-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center">-</button>
@@ -678,7 +695,7 @@ const RawatJalan = () => {
                                                                             <td className="border p-2 border-gray-400 font-bold">Total Harga</td>
                                                                             <td className="border text-end border-gray-400 font-bold pr-5">
                                                                                 {formatNumber(tarif
-                                                                                    .filter(tarifData => tarifData.rekam_medis_id === r.rekam_medis_id)
+                                                                                     .filter(tarifData => tarifData.rekam_medis_id === r.rekam_medis_id && tarifData.layanan_id !== null)
                                                                                     .reduce((sum, tarifData) => sum + dataLayanan[tarifData.layanan_id - 1]?.harga, 0) +
                                                                                     layanans.reduce((sum, layanan) => sum + dataLayanan[layanan.tarif_id - 1]?.harga, 0))}
                                                                             </td>

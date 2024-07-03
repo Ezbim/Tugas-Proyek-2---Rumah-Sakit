@@ -143,7 +143,7 @@ const RekamMedis = () => {
             <table className="w-full border-collapse border border-gray-300">
                 <thead>
                     <tr className="bg-gray-100 ">
-                        <th className="border border-gray-300 sm:px-4  px-auto py-2">No</th>
+                        <th className="border border-gray-300 sm:px-4  px-auto py-2">Id</th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Pasien </th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Dokter </th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Poliklinik</th>
@@ -163,31 +163,31 @@ const RekamMedis = () => {
                                 <tr
                                     key={rD.rekam_medis_id}
                                     className="hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => handlePasienClick(rD.rekam_medis_id)}
+                                    onClick={() => handlePasienClick(rD.pasien_id)}
                                 >
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rD.rekam_medis_id}</td>
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData[rD.pasien_id - 1]?.nama_pasien}</td>
+                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{dokterData[rD.dokter_id - 1]?.nama_dokter}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{poliData[rD.poliklinik_id - 1]?.nama_poliklinik}</td>
                                     {isSmallScreen ? '' : <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{formatDate(rD.waktu_rekam)}</td>}
                                 </tr>
-                                {activePasien === rD.rekam_medis_id && (
+                                {activePasien === rD.pasien_id && (
                                     <>
                                         <tr >
                                             <td className="bg-gray-100 px-4 p-5" colSpan="7">
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40 ">Nama </div>:
-                                                    <div className="px-4">{pasienData[rekamData[rD.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}</div>
+                                                    <div className="px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
                                                 </div>
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Tanggal Lahir</div>:
-                                                    <div className="px-4">{formatDate2(pasienData[rekamData[rD.rekam_medis_id - 1]?.pasien_id - 1]?.tanggal_lahir)}</div>
+                                                    <div className="px-4">{formatDate2(pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.tanggal_lahir)}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Jenis Kelamin</div>:
-                                                    <div className=" px-4">{pasienData[rekamData[rD.rekam_medis_id - 1]?.pasien_id - 1]?.jenis_kelamin}</div>
+                                                    <div className=" px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.jenis_kelamin}</div>
                                                 </div>
                                                 <div className="flex flex-col mb-2 sm:flex-col " >
                                                     <div className="flex mb-2">
@@ -197,17 +197,19 @@ const RekamMedis = () => {
                                                     <div className="flex w-full flex-wrap ">
 
 
-                                                        {rekamData.map((r) => (
-                                                            activePasien === r.rekam_medis_id&& (
+                                                        {rekamData.filter(r => r.pasien_id === activePasien)
+                                                        .map((r) => (
+                                                           
 
 
 
 
                                                                 <div
                                                                     className={`h-20 w-full sm:w-48 min-w-48 p-2 m-1 cursor-pointer rounded-lg shadow-md flex  flex-col border border-black ${activeRow === r.rekam_medis_id ? 'bg-gray-300  ' : 'hover:bg-gray-100 bg-white '}`}
-                                                                    key={r.rekam_medis_id}
+                                                                    key={r}
                                                                     onClick={() => handleRowClick(r.rekam_medis_id)}
                                                                 >
+                                                                
                                                                     <div className={` w-fit h-fit px-2 rounded-md ${activeRow === r.rekam_medis_id ? 'bg-white border border-black text-black' : 'bg-white border border-black text-black'}`}>{formatDate3(r.waktu_rekam)}</div>
                                                                     <div className=" overflow-auto">{rekamData[r.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[r.rekam_medis_id - 1]?.diagnosis}</div>
 
@@ -215,7 +217,7 @@ const RekamMedis = () => {
                                                                 </div>
 
 
-                                                            )
+                                                            
                                                         ))}
                                                     </div>
                                                 </div>
@@ -253,7 +255,7 @@ const RekamMedis = () => {
                                                             <table className="w-full">
                                                                 <tr>
                                                                     <td className="border p-2 border-gray-400 w-1/4">Nama pasien :</td>
-                                                                    <td className="border p-2 border-gray-400" >{pasienData[rekam.pasien_id - 1]?.nama_pasien}</td>
+                                                                    <td className="border p-2 border-gray-400" >{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td className="border p-2 border-gray-400">Dokter :</td>

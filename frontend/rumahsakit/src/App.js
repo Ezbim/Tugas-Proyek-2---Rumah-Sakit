@@ -12,6 +12,8 @@ import RekamMedis from './rekamMedis';
 import RawatJalan from './rawatJalan';
 import Pasien from './pasien';
 import Antrian from './antrian';
+import Entitas from './entitas';
+
 
 const UnAuthenticated = <Otentifikasi />;
 
@@ -30,43 +32,89 @@ function App() {
 
   return (
     <Router>
-      <div className="app font-sans">
-        <Navigation />
-        <div className="display overflow-hidden my-10">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route 
-              path="/pendaftaran" 
-              element={<ProtectedRoute element={<Pendaftaran />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
-            />
-            <Route 
-              path="/antrian" 
-              element={<ProtectedRoute element={<Antrian />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
-            />
-            <Route 
-              path="/otentifikasi" 
-              element={user === '' ? UnAuthenticated : <LandingPage />} 
-            />
-            <Route 
-              path="/RekamMedis" 
-              element={<ProtectedRoute element={<RekamMedis />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
-            />
-            <Route 
-              path="/RawatInap" 
-              element={<ProtectedRoute element={<RawatInap />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
-            />
-            <Route 
-              path="/RawatJalan" 
-              element={<ProtectedRoute element={<RawatJalan />} condition={role === 'petugas'} alertMessage="Access Denied: Anda Bukan Petugas." />} 
-            />
-            <Route 
-              path="/Pasien" 
-              element={<ProtectedRoute element={<Pasien />} condition={role === 'dokter'} alertMessage="Access Denied: Anda Bukan Dokter." />} 
-            />
-          </Routes>
-        </div>
+    <div className="app font-sans">
+      <Navigation />
+      <div className="display overflow-hidden my-10">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/pendaftaran"
+            element={
+              <ProtectedRoute
+                element={<Pendaftaran />}
+                condition={role === 'admin' || role === 'petugas pendaftaran'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+          <Route
+            path="/antrian"
+            element={
+              <ProtectedRoute
+                element={<Antrian />}
+                condition={role === 'admin' || role === 'petugas antrian'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+          <Route
+            path="/otentifikasi"
+            element={user === '' ? <Otentifikasi /> : <LandingPage />}
+          />
+          <Route
+            path="/RekamMedis"
+            element={
+              <ProtectedRoute
+                element={<RekamMedis />}
+                condition={role === 'admin' || role === 'dokter' || role === 'petugas rekam medis'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+          <Route
+            path="/RawatInap"
+            element={
+              <ProtectedRoute
+                element={<RawatInap />}
+                condition={role === 'admin' || role === 'dokter' || role === 'petugas rawat inap'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+          <Route
+            path="/RawatJalan"
+            element={
+              <ProtectedRoute
+                element={<RawatJalan />}
+                condition={role === 'admin' || role === 'dokter' || role === 'petugas rawat jalan'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+          <Route
+            path="/Pasien"
+            element={
+              <ProtectedRoute
+                element={<Pasien />}
+                condition={role === 'dokter'}
+                alertMessage="Access Denied: Anda Bukan Dokter."
+              />
+            }
+          />
+          <Route
+            path="/entitas"
+            element={
+              <ProtectedRoute
+                element={<Entitas />}
+                condition={role === 'admin' || role === 'petugas entitas'}
+                alertMessage="Access Denied: Anda Tidak Memiliki Akses."
+              />
+            }
+          />
+        </Routes>
       </div>
-    </Router>
+    </div>
+  </Router>
   );
 }
 

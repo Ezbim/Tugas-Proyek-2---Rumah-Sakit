@@ -18,11 +18,11 @@ function Pendaftaran() {
     const [dokterOptions, setDokterOptions] = useState([]);
     const [poliklinikOption, setPoliklinikOption] = useState([]);
     const [pasienData, setPasienData] = useState([])
-    const [tarif, setTarif] = useState('')
+    const [tarif, setTarif] = useState(1)
     const [registrationData, setRegistrationData] = useState('');
     const [errors, setErrors] = useState({});
     const [pasienDat, setPasienDat] = useState([])
-    useEffect(() => {
+   /*  useEffect(() => {
         if (poliklinik == 1) {
             setTarif(1)
         } else if (poliklinik == 2) {
@@ -30,7 +30,7 @@ function Pendaftaran() {
         } else if (poliklinik == 3) {
             setTarif(3)
         }
-    }, [poliklinik])
+    }, [poliklinik]) */
 
     useEffect(() => {
         fetch('http://localhost:3000/dokter')
@@ -350,7 +350,7 @@ function Pendaftaran() {
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center"
                                     
                                 >
-                                    <div className='shadow-md p-4 bg-white min-w-96 h-52 relative rounded-lg'
+                                    <div className='shadow-md p-4 bg-white min-w-96 w-fit w-fit h-fit relative rounded-lg'
                                         ref={boxRef}
                                         tabIndex={-1}
                                         onBlur={handleBlur}
@@ -374,19 +374,26 @@ function Pendaftaran() {
                                             </svg>
                                             <p className='text-xl'>RS UPAYA SEHAT</p>
                                         </div>
-                                        <div className='flex items-center p-4 w-96'>
-                                            <div className="p-2 w-28 h-28 border-2 border-black mr-4 rounded-lg ">
+                                        <div className='flex items-center h-44 mt-5 '>
+                                            <div className="p-2 w-36 h-36 border-2 border-black mr-4 rounded-lg items-center flex">
                                                 <img src="https://cdn2.iconfinder.com/data/icons/e-commerce-line-4-1/1024/user4-512.png" alt="" />
                                             </div>
-                                            <div>
-                                                <div className="p-2">
+                                            <div className='w-full'>
+                                                <div className="p-1 flex">
+                                                    
                                                     ID Pasien : {registrationData.registration.pasien_id}
                                                 </div>
-                                                <div className="p-2">
-                                                    Nama Pasien : {pasienDat.find(r=> r.pasien_id === registrationData.registration.pasien_id)?.nama_pasien}
+                                                <div className="p-1">
+                                                    Nama Pasien : {registrationData.registration.nama_pasien || pasienDat.find(p=>p.pasien_id == registrationData.registration.pasien_id)?.nama_pasien }
                                                 </div>
-                                                <div className="p-2">
-                                                    Jenis Kelamin : {pasienDat.find(r=> r.pasien_id === registrationData.registration.pasien_id)?.jenis_kelamin}
+                                                <div className="p-1">
+                                                    Jenis Kelamin : {registrationData.registration.jenis_kelamin || pasienDat.find(p=>p.pasien_id == registrationData.registration.pasien_id)?.jenis_kelamin  }
+                                                </div>
+                                                <div className="p-1">
+                                                    Alamat : {registrationData.registration.alamat || pasienDat.find(p=>p.pasien_id == registrationData.registration.pasien_id)?.alamat }
+                                                </div>
+                                                <div className="p-1">
+                                                    No Telepon : {registrationData.registration.no_telepon || pasienDat.find(p=>p.pasien_id == registrationData.registration.pasien_id)?.no_telepon }
                                                 </div>
                                             </div>
                                         </div>

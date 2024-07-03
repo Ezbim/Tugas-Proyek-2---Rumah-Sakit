@@ -3,7 +3,7 @@ import { MdPrint } from 'react-icons/md';
 import SearchComponent from "./components/searchComponent";
 import SearchComponent2 from "./components/searchComponent2";
 import RawatJalan from "./rawatJalan";
-import { color } from "tmi.js/lib/commands";
+
 
 
 const RawatInap = () => {
@@ -109,18 +109,37 @@ const RawatInap = () => {
         setLayanans([])
         setDeletedResep([])
         setDeletedLayanans([])
+
         setPoliklinik('')
         setNamaDokter('')
         setDiagnosis('')
         setTindakan('')
         setCatatan('')
+        setCurrentKamar('')
         setTanggalKunjungan('')
         setActiveRow(null)
     }
-
-    const handleRowClick = (id) => {
+    const [totalDays, setTotalDays] = useState(1);
+    const handleRowClick = (id, r) => {
+        console.log(r.tanggal_masuk)
         resetInput()
         setActiveRow(activeRow === id ? null : id);
+
+        const calculateDaysDifference = (start, end) => {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            const timeDiff = endDate - startDate;
+            const dayDiff = timeDiff / (1000 * 3600 * 24);
+            return dayDiff;
+        };
+
+        if (r.tanggal_masuk && r.tanggal_keluar) {
+            const diffInDays = calculateDaysDifference(r.tanggal_masuk, r.tanggal_keluar);
+            { diffInDays > 0 && setTotalDays(diffInDays) }
+        }
+
+
+
     };
     const handlePasienClick = (id) => {
         resetInput()
@@ -133,12 +152,14 @@ const RawatInap = () => {
     const [tanggalKunjungan, setTanggalKunjungan] = useState('')
     const [namaDokter, setNamaDokter] = useState('')
     const [poliklinik, setPoliklinik] = useState('')
-    const [jenisRawat, setJenisRawat] = useState(true)
+    const [jenisRawat, setJenisRawat] = useState(false)
     const [diagnosis, setDiagnosis] = useState('')
     const [tindakan, setTindakan] = useState('')
     const [catatan, setCatatan] = useState('')
     const [warnaGelang, setWarnaGelang] = useState('')
-
+    const [currentKamar, setCurrentKamar] = useState('')
+    const [tanggalMasuk, setTanggalMasuk] = useState('')
+    const [tanggalKeluar, setTanggalKeluar] = useState('')
 
     const [resep, setResep] = useState([])
     const [layanans, setLayanans] = useState([])
@@ -169,8 +190,9 @@ const RawatInap = () => {
     const handleAddObat = (e, rawatJalan) => {
         e.preventDefault();
         const pasien_id = pasienData[rekamData[rawatJalan.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id;
-        if (pasien_id && obat_id && jumlah && dosis) {
-            const newObat = { pasien_id, obat_id, jumlah, dosis };
+        const rekam_medis_id = rawatJalan.rekam_medis_id;
+        if (pasien_id && rekam_medis_id && obat_id && jumlah && dosis) {
+            const newObat = { pasien_id, rekam_medis_id, obat_id, jumlah, dosis };
             setResep(prevResep => [...prevResep, newObat]);
         }
     }
@@ -195,8 +217,8 @@ const RawatInap = () => {
             const filteredRecommendations = dataLayanan.filter(item =>
                 item.nama_layanan.toLowerCase().includes(value.toLowerCase())
             );
-            setRecommendations2(filteredRecommendations);
 
+            setRecommendations2(filteredRecommendations);
         } else {
             setRecommendations2([]);
         }
@@ -205,7 +227,9 @@ const RawatInap = () => {
         e.preventDefault();
 
         const layananPasien = pasienData[rekamData[rawatJalan.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id;
-        const newLayanan = { layananPasien, tarif_id };
+        const rekam_medis_id = rawatJalan.rekam_medis_id;
+
+        const newLayanan = { layananPasien, rekam_medis_id, tarif_id };
         setLayanans([...layanans, newLayanan])
 
     }
@@ -219,51 +243,58 @@ const RawatInap = () => {
     const [succes, setSucces] = useState(false)
     const [failed, setFailed] = useState(false)
 
+
+
     const handleSubmit = async (e, rawatJalan) => {
         e.preventDefault();
-
+        const currentPage = 'rawat_inap'
         const currentRekam = rawatJalan.rekam_medis_id;
         console.log('current : ', currentRekam, resep);
 
-        if (jenisRawat) {
-            try {
-                const response = await fetch('http://localhost:3000/rawatJalanUpdate', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        currentRekam,
-                        activeRow,
-                        tanggalKunjungan,
-                        namaDokter,
-                        poliklinik,
-                        diagnosis,
-                        tindakan,
-                        catatan,
-                        resep,
-                        deletedResep,
-                        layanans,
-                        deletedLayanans
-                    }),
-                });
 
-                console.log(response.status);
+        try {
+            const response = await fetch('http://localhost:3000/rawatJalanUpdate', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    currentKamar,
+                    warnaGelang,
+                    tanggalMasuk,
+                    tanggalKeluar,
+                    currentPage,
+                    currentRekam,
+                    activePasien,
+                    activeRow,
+                    jenisRawat,
+                    tanggalKunjungan,
+                    namaDokter,
+                    poliklinik,
+                    diagnosis,
+                    tindakan,
+                    catatan,
+                    resep,
+                    deletedResep,
+                    layanans,
+                    deletedLayanans
+                }),
+            });
 
-                if (response.ok) {
-                    resetInput();
-                    setSucces(true)
-                    { toggleRefetch === 0 ? setToggleRefetch(1) : setToggleRefetch(0) }
-                }
-                const data = await response.json();
-                console.log(data);
-            } catch (error) {
-                setFailed(true)
-                console.error('Fetch error:', error);
+            console.log(response.status);
+
+            if (response.ok) {
+                resetInput();
+                setSucces(true)
+                { toggleRefetch === 0 ? setToggleRefetch(1) : setToggleRefetch(0) }
             }
-        } else if (!jenisRawat) {
-
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            setFailed(true)
+            console.error('Fetch error:', error);
         }
+
     };
 
     useEffect(() => {
@@ -296,14 +327,26 @@ const RawatInap = () => {
     const [deletedLayanans, setDeletedLayanans] = useState([])
     const [deletedResep, setDeletedResep] = useState([])
     useEffect(() => {
-        console.log(activeRow,
+        console.log(
+            currentKamar,
+            warnaGelang,
+            tanggalMasuk,
+            tanggalKeluar,
+            activeRow,
+            activePasien,
             tanggalKunjungan,
             namaDokter,
             poliklinik,
             diagnosis,
             tindakan,
             catatan, jenisRawat, resep, deletedResep, layanans, deletedLayanans)
-    }, [activeRow,
+    }, [
+        currentKamar,
+        warnaGelang,
+        tanggalMasuk,
+        tanggalKeluar,
+        activeRow,
+        activePasien,
         tanggalKunjungan,
         namaDokter,
         poliklinik,
@@ -371,19 +414,30 @@ const RawatInap = () => {
         return date.toLocaleDateString('id-ID', options);
     };
 
+    function formatNumber(value) {
+        return new Intl.NumberFormat('en-US').format(value);
+    }
+
+    const changeDokter = (id) => {
+
+        setNamaDokter(id)
+        setPoliklinik(dokter.find(d => d.dokter_id == id)?.poliklinik_id)
+    }
+
+
 
     return (
-        <div className="flex flex-col items-center max-w-4xl mx-auto p-4 px-8 rounded-xl shadow-md my-2 text-sm md:text-lg">
+        <div className="flex flex-col items-center max-w-4xl mx-auto p-4 px-8 rounded-xl shadow-md my-2 text-sm sm:text-lg">
             <button className="p-4 bg-purple-500 text-white rounded-md fixed bottom-5 left-5" hidden onClick={() => { console.log(rawatJalan[0].tanggal_keluar) }}> LOG </button>
             <h1 className="text-2xl font-bold mb-4">Rawat Inap</h1>
             <table className="w-full border-collapse border border-gray-300">
                 <thead>
                     <tr className="bg-gray-100">
-                        <th className="border border-gray-300 sm:px-4  px-auto py-2">No</th>
+                        <th className="border border-gray-300 sm:px-4  px-auto py-2">Id</th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Pasien </th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Tanggal Masuk</th>
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Tanggal Keluar</th>
-                        <th className="border border-gray-300 sm:px-4  px-auto py-2">Dokter</th>
+                        {isSmallScreen ? '' : <th className="border border-gray-300 sm:px-4  px-auto py-2">Dokter</th>}
                         {isSmallScreen ? '' : <th className="border border-gray-300 px-auto py-2">Diagnosis</th>}
                         <th className="border border-gray-300 sm:px-4  px-auto py-2">Ruangan</th>
 
@@ -405,11 +459,11 @@ const RawatInap = () => {
                                     className="hover:bg-gray-50 cursor-pointer relative border-2"
                                     onClick={() => handlePasienClick(rekamData.find(r => r.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)}
                                 >
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rJ.rawat_inap_id}</td>
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}</td>
+                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rekamData.find(r => r.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id}</td>
+                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rJ.tanggal_masuk == null ? "-" : formatDate(rJ.tanggal_masuk)}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rJ.tanggal_keluar == null ? "-" : formatDate(rJ.tanggal_keluar)}</td>
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{dokter[rekamData[rJ.rekam_medis_id - 1]?.dokter_id - 1]?.nama_dokter}</td>
+                                    {isSmallScreen ? '' : <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{dokter[rekamData[rJ.rekam_medis_id - 1]?.dokter_id - 1]?.nama_dokter}</td>}
                                     {isSmallScreen ? '' : <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rekamData[rJ.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[rJ.rekam_medis_id - 1]?.diagnosis}</td>}
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{kamar.find(tipe => tipe.kamar_id === rJ.kamar_id)?.kelas}</td>
 
@@ -420,19 +474,19 @@ const RawatInap = () => {
                                 {activePasien === rekamData[rJ.rekam_medis_id - 1]?.pasien_id && (
                                     <>
                                         <tr >
-                                            <td className="bg-gray-100 px-4 p-5" colSpan="7">
+                                            <td className="bg-gray-100 px-4 p-5 max-w-32 " colSpan="7">
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40 ">Nama </div>:
-                                                    <div className="px-4">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}</div>
+                                                    <div className="px-4">{pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Tanggal Lahir</div>:
-                                                    <div className="px-4">{formatDate(pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.tanggal_lahir)}</div>
+                                                    <div className="px-4">{formatDate(pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.tanggal_lahir)}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Jenis Kelamin</div>:
-                                                    <div className=" px-4">{pasienData[rekamData[rJ.rekam_medis_id - 1]?.pasien_id - 1]?.jenis_kelamin}</div>
+                                                    <div className=" px-4">{pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.jenis_kelamin}</div>
                                                 </div>
 
                                                 <div className=" flex mb-2 flex-col" >
@@ -440,12 +494,12 @@ const RawatInap = () => {
                                                         <p className="min-w-40">Rawat Jalan Pasien</p>
                                                         <span>:</span>
                                                     </div>
-                                                    <div className="block sm:flex ">
+                                                    <div className="block sm:flex flex-wrap gap-2 ">
 
                                                         {rawatJalan.map((r, index) => (
                                                             activePasien === rekamData[r.rekam_medis_id - 1]?.pasien_id && (
                                                                 rekamData[r.rekam_medis_id - 1]?.pasien_id === activePasien && (
-                                                                    <div className="border min-w-72  mr-6 rounded-lg " onClick={() => handleRowClick(r.rawat_inap_id)} style={activeRow === r.rawat_inap_id ? { borderColor: `${gelang.find(g => g.gelang_id === r.gelang_id)?.warna}`, borderWidth: '2px', borderStyle: 'solid' } : {}}>
+                                                                    <div className="border min-w-72  mr-6 rounded-lg " onClick={() => handleRowClick(r.rawat_inap_id, r)} style={activeRow === r.rawat_inap_id ? { borderColor: `${gelang.find(g => g.gelang_id === r.gelang_id)?.warna}`, borderWidth: '2px', borderStyle: 'solid' } : {}}>
 
 
                                                                         <div
@@ -493,7 +547,11 @@ const RawatInap = () => {
                                                                     </svg>
                                                                     <p>RS UPAYA SEHAT </p>
                                                                 </div>
-                                                                <p className="mr-10">ID Rawat Inap : {r.rawat_inap_id}</p>
+                                                                <div className="flex">
+                                                                    <p className="mr-4 border border-black rounded-lg p-2">ID Rawat Inap : {r.rawat_inap_id}</p>
+                                                                    <p className="mr-4 border border-black rounded-lg p-2">ID RM : {r.rekam_medis_id}</p>
+                                                                </div>
+
                                                             </div>
                                                             {/* form data*/}
                                                             {/* className="border-2 border-red-500" */}
@@ -502,7 +560,7 @@ const RawatInap = () => {
                                                                     <tr>
                                                                         <td className="border p-2 border-gray-400 w-1/4">Nama pasien : </td>
                                                                         <td className="border  border-gray-400 p-2" >
-                                                                            {pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.nama_pasien}
+                                                                            {pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}
                                                                         </td>
 
                                                                     </tr>
@@ -518,16 +576,20 @@ const RawatInap = () => {
                                                                         <td className="border p-2 border-gray-400 w-1/4">Tanggal keluar : </td>
 
                                                                         <td className="border border-gray-400 p-2" >
-                                                                            <input name="tanggal_kunjungan" onChange={(e) => { setTanggalKunjungan(e.target.value) }} className="h-10 w-full pl-2" type="date" defaultValue={r.tanggal_keluar === null ? '' : formatForInput(r.tanggal_keluar)} />
+                                                                            <input name="tanggal_kunjungan" onChange={(e) => { setTanggalKeluar(e.target.value) }} className="h-10 w-full pl-2" type="date" defaultValue={r.tanggal_keluar === null ? '' : formatForInput(r.tanggal_keluar)} />
 
                                                                         </td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td className="border p-2 border-gray-400 w-1/4">Jenis Rawat : </td>
                                                                         <td className="border  border-gray-400" >
-                                                                            <select name="jenis_rawat" className="p-2 border w-full h-12" onChange={(e) => { setJenisRawat(!jenisRawat) }} defaultValue={jenisRawat}>
-                                                                                <option value='rawat jalan'> Rawat Jalan</option>
-                                                                                <option value='rawat inap'> Rawat Inap</option>
+                                                                            <select name="jenis_rawat" className="p-2 border w-full h-12" onChange={(e) => {
+                                                                                const value = e.target.value === 'true';
+                                                                                setJenisRawat(value);
+                                                                            }} defaultValue={jenisRawat}>
+                                                                                <option value="false">Rawat Inap</option>
+                                                                                <option value="true">Rawat Jalan</option>
+
                                                                             </select>
                                                                         </td>
                                                                     </tr>
@@ -554,7 +616,7 @@ const RawatInap = () => {
                                                                         <td className="border p-2 border-gray-400 w-1/4">Nama dokter : </td>
 
                                                                         <td className="border  border-gray-400" >
-                                                                            <select name="nama_dokter" className="h-10 w-full pl-2" defaultValue={rekamData[r.rekam_medis_id - 1]?.dokter_id} onChange={(e) => { setNamaDokter(Number(e.target.value)) }} >
+                                                                            <select name="nama_dokter" className="h-10 w-full pl-2" defaultValue={rekamData[r.rekam_medis_id - 1]?.dokter_id} onChange={(e) => { changeDokter(Number(e.target.value)) }} >
                                                                                 {dokter
                                                                                     .filter(dokter =>
                                                                                         poliklinik !== ''
@@ -598,7 +660,7 @@ const RawatInap = () => {
                                                                         <td className="border p-2 border-gray-400 w-1/4">Kamar : </td>
 
                                                                         <td className="border  border-gray-400 " >
-                                                                            <select name="nama_dokter" className="h-10 w-full pl-2"  >
+                                                                            <select name="nama_dokter" className="h-10 w-full pl-2" onChange={(e) => setCurrentKamar(Number(e.target.value))} >
                                                                                 {kamar
                                                                                     .sort((a, b) =>
                                                                                         a.kamar_id === r.kamar_id ? -1 :
@@ -620,6 +682,7 @@ const RawatInap = () => {
 
                                                                         <td className="border  border-gray-400 flex justify-center  items-center" >
                                                                             <select name="nama_dokter" className="h-10 w-4/6 pl-2 rounded-md" style={{ backgroundColor: `${warnaGelang !== '' ? gelang.find(g => g.gelang_id === warnaGelang)?.warna : gelang.find(g => g.gelang_id === r.gelang_id)?.warna}` }} defaultValue={gelang.find(g => g.gelang_id === r.gelang_id)?.warna} onChange={(e) => { setWarnaGelang(Number(e.target.value)) }} >
+
                                                                                 {gelang
                                                                                     .sort((a, b) =>
                                                                                         a.gelang_id === r.gelang_id ? -1 :
@@ -627,7 +690,7 @@ const RawatInap = () => {
                                                                                                 0
                                                                                     )
                                                                                     .map((g, index) => (
-                                                                                        <option className="p-20 h-40 w-40 flex border border-black" key={index} value={g.gelang_id} style={{ backgroundColor: `${g.warna}` }}>
+                                                                                        <option className="p-20 h-40 w-40 flex border border-black" key={g.gelang_id} value={g.gelang_id} style={{ backgroundColor: `${g.warna}` }}>
 
                                                                                         </option>
                                                                                     ))
@@ -668,12 +731,12 @@ const RawatInap = () => {
                                                                     </thead>
                                                                     <tbody>
                                                                         {resepData.map((resepData, index) => (
-                                                                            resepData.pasien_id === pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id && (
+                                                                            resepData.rekam_medis_id === r.rekam_medis_id && (
                                                                                 <tr className="relative" key={index}>
                                                                                     <td className="border p-2 border-gray-400 w-2/5">{obat.find(obj => obj.obat_id === resepData.obat_id)?.nama_obat}</td>
-                                                                                    <td className="border text-center border-gray-400">{resepData.jumlah}</td>
-                                                                                    <td className="border text-center border-gray-400">{resepData.dosis}</td>
-                                                                                    <td className="border text-center border-gray-400">{resepData.harga}</td>
+                                                                                    <td className="border text-center pr-5 border-gray-400">{resepData.jumlah}</td>
+                                                                                    <td className="border text-center pr-5 border-gray-400">{resepData.dosis}</td>
+                                                                                    <td className="border text-end pr-5 border-gray-400">{formatNumber(resepData.harga)}</td>
                                                                                     <button onClick={(e) => removeItemById(e, resepData)} id="resepData" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center">-</button>
                                                                                 </tr>
                                                                             )
@@ -682,21 +745,21 @@ const RawatInap = () => {
                                                                         {resep.map((resepId, index) => (
                                                                             <tr key={index}>
                                                                                 <td className="border p-2 border-gray-400 w-2/5">{obat[resepId.obat_id - 1].nama_obat}</td>
-                                                                                <td className="border text-center border-gray-400">{resep[index].jumlah}</td>
-                                                                                <td className="border text-center border-gray-400">{resep[index].dosis}</td>
-                                                                                <td className="border text-center border-gray-400">{obat[resepId.obat_id - 1]?.harga * resep[index].jumlah}</td>
-                                                                                <button onClick={(e) => removeItemById(e, resepId.obat_id)} id="resep" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center">-</button>
+                                                                                <td className="border text-center pr-5 border-gray-400">{resep[index].jumlah}</td>
+                                                                                <td className="border text-center pr-5 border-gray-400">{resep[index].dosis}</td>
+                                                                                <td className="border text-end pr-5 border-gray-400">{formatNumber(obat[resepId.obat_id - 1]?.harga * resep[index].jumlah)}</td>
+                                                                                <button onClick={(e) => removeItemById(e, resepId.obat_id)} id="resep" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center ">-</button>
                                                                             </tr>
                                                                         ))}
 
 
                                                                         <tr>
                                                                             <td className="border p-2 border-gray-400 font-bold " colSpan="3">Total Harga</td>
-                                                                            <td className="border text-center border-gray-400 font-bold" >
-                                                                                {resepData
-                                                                                    .filter(resepDataItem => resepDataItem.pasien_id === pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id)
+                                                                            <td className="border text-end pr-5 border-gray-400 font-bold" >
+                                                                                {formatNumber(resepData
+                                                                                    .filter(resepDataItem => resepDataItem.rekam_medis_id === r.rekam_medis_id)
                                                                                     .reduce((sum, resepDataItem) => sum + resepDataItem.harga, 0) +
-                                                                                    resep.reduce((sum, resepId) => sum + (obat[resepId.obat_id - 1]?.harga * resep.find(r => r.obat_id === resepId.obat_id).jumlah), 0)}
+                                                                                    resep.reduce((sum, resepId) => sum + (obat[resepId.obat_id - 1]?.harga * resep.find(r => r.obat_id === resepId.obat_id).jumlah), 0))}
                                                                             </td>
                                                                         </tr>
 
@@ -721,31 +784,57 @@ const RawatInap = () => {
                                                                     </thead>
                                                                     <tbody >
                                                                         {tarif.map((tarifData, index) => (
-                                                                            tarifData.pasien_id === pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id && (
+                                                                            tarifData.rekam_medis_id === r.rekam_medis_id && (
                                                                                 <tr key={index} className="relative" >
-                                                                                    <td className="border p-2 border-gray-400 w-2/5">{dataLayanan[tarifData.layanan_id - 1]?.nama_layanan}</td>
-                                                                                    <td className="border text-center border-gray-400 w-2/4">{dataLayanan[tarifData.layanan_id - 1]?.harga}</td>
-                                                                                    <button onClick={(e) => removeItemById(e, tarifData)} id="tarif" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center">-</button>
+                                                                                    <td className="border p-2 border-gray-400 w-2/5">{dataLayanan[tarifData.layanan_id - 1]?.nama_layanan || `Kamar Kelas ${kamar.find(k => k.kamar_id === (currentKamar === '' ? tarifData.kamar_id : currentKamar))?.kelas} (${totalDays} hari)`}</td>
+                                                                                    <td className="border text-end pr-5 border-gray-400 w-2/4">
+                                                                                        {formatNumber(dataLayanan[tarifData.layanan_id - 1]?.harga ||
+
+                                                                                            kamar.find(k => k.kamar_id === (currentKamar === '' ? tarifData.kamar_id : currentKamar))?.biaya_ruangan * totalDays)}
+                                                                                    </td>
+                                                                                    <button onClick={(e) => removeItemById(e, tarifData)} id="tarif" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center ">-</button>
                                                                                 </tr>
                                                                             )
                                                                         ))}
 
                                                                         {layanans.map((layanan, index) => (
                                                                             <tr key={index}>
-                                                                                <td className="border p-2 border-gray-400 w-2/5">{dataLayanan[layanan.tarif_id - 1]?.nama_layanan}</td>
-                                                                                <td className="border text-center border-gray-400 w-2/4">{dataLayanan[layanan.tarif_id - 1]?.harga}</td>
-                                                                                <button onClick={(e) => removeItemById(e, layanan)} id="layanans" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center">-</button>
+                                                                                <td className="border p-2 border-gray-400 w-2/5">{dataLayanan[layanan.tarif_id - 1]?.nama_layanan || kamar[layanan.kamar_id]?.kelas}</td>
+                                                                                <td className="border text-end pr-5 border-gray-400 w-2/4">
+                                                                                    {formatNumber(dataLayanan[layanan.tarif_id - 1]?.harga)}
+                                                                                </td>
+                                                                                <button onClick={(e) => removeItemById(e, layanan)} id="layanans" className="ml-auto rounded-md cursor-pointer top-1 flex items-center justify-center h-8 w-8 border border-gray-700 hover:bg-red-400 text-center 5">-</button>
                                                                             </tr>
                                                                         ))}
 
                                                                         <tr>
                                                                             <td className="border p-2 border-gray-400 font-bold">Total Harga</td>
-                                                                            <td className="border text-center border-gray-400 font-bold">
-                                                                                {tarif
-                                                                                    .filter(tarifData => tarifData.pasien_id === pasienData[rekamData[r.rekam_medis_id - 1]?.pasien_id - 1]?.pasien_id)
-                                                                                    .reduce((sum, tarifData) => sum + dataLayanan[tarifData.layanan_id - 1]?.harga, 0) +
-                                                                                    layanans.reduce((sum, layanan) => sum + dataLayanan[layanan.tarif_id - 1]?.harga, 0)}
+                                                                            <td className="border text-end pr-5 border-gray-400 font-bold">
+                                                                                {
+                                                                                    formatNumber(tarif
+                                                                                        .filter(tarifData => tarifData.rekam_medis_id === r.rekam_medis_id)
+                                                                                        .reduce((sum, tarifData) => {
+                                                                                            const layananCost = dataLayanan[tarifData.layanan_id - 1]?.harga || 0;
+                                                                                            return sum + layananCost ;
+                                                                                        }, 0) +
+                                                                                        (
+                                                                                            tarif
+                                                                                                .filter(tarifData => tarifData.rekam_medis_id === r.rekam_medis_id)
+                                                                                                .reduce((_, tarifData) => {
+                                                                                                    const kamarId = currentKamar === '' ? tarifData.kamar_id : currentKamar;
+                                                                                                    const kamarCost = kamar.find(k => k.kamar_id === kamarId)?.biaya_ruangan || 0;
+                                                                                                    const totalKamarCost = kamarCost * totalDays;
+                                                                                                    return totalKamarCost;
+                                                                                                }, 0)
+                                                                                        ) +
+                                                                                        layanans.reduce((sum, layanan) => {
+                                                                                            return sum + (dataLayanan[layanan.tarif_id - 1]?.harga || 0);
+                                                                                        }, 0))
+                                                                                }
                                                                             </td>
+
+
+
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>

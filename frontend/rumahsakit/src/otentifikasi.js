@@ -137,11 +137,18 @@ const Register = ({ switchMode, onRegister }) => {
                         onChange={(e) => setRole(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="petugas">Petugas</option>
+                        <option> Pilih Role</option>
+                        <option value="petugas pendaftaran">Petugas pendaftaran</option>
+                        <option value="petugas antrian">Petugas antrian</option>
+                        <option value="petugas entitas">Petugas entitas</option>
+                        <option value="petugas rekam medis">Petugas rekam medis</option>
+                        <option value="petugas rawat inap">Petugas rawat inap</option>
+                        <option value="petugas rawat jalan">Petugas rawat jalan</option>
                         <option value="dokter">Dokter</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
-                {role === 'petugas' ? (
+                {role !== 'dokter' ? (
                 <div className="mb-4">
                     <label htmlFor="nama_lengkap" className="block text-gray-700">Nama Lengkap: </label>
                     <input

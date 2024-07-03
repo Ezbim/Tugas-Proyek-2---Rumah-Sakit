@@ -47,21 +47,18 @@ const Navigation = () => {
                     </div>
                     <div className="items-center hidden md:flex space-x-4 px-10">
 
-                        {role === 'dokter' || role === 'petugas' &&
-                        <>
-                        <NavLink to='/pendaftaran' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
-                                Pendaftaran
-                            </NavLink>
-                            <NavLink to='/antrian' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/antrian' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
-                                Antrian
-                            </NavLink>
-                        </>
-                            
-                        }
-
-                        {role === 'petugas' &&
-
+                        {role === 'admin' &&
                             <>
+                                <NavLink to='/pendaftaran' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Pendaftaran
+                                </NavLink>
+                                <NavLink to='/antrian' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/antrian' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Antrian
+                                </NavLink>
+                                <NavLink to='/entitas' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/entitas' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Entitas
+                                </NavLink>
+
                                 <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
                                     Rekam Medis
                                 </NavLink>
@@ -74,23 +71,92 @@ const Navigation = () => {
                             </>
 
                         }
-
-                        {role === 'dokter' &&
+                        {role === 'petugas pendaftaran' &&
                             <>
-                                <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
-                                    RekamMedis
+                                <NavLink to='/pendaftaran' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Pendaftaran
                                 </NavLink>
-                                <NavLink to={user !== '' ? ('/pasien') : ('/otentifikasi')} className='navPendaftaran block text-black py-2'>
-                                    Pasien
+
+                                <NavLink to='/entitas' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/entitas' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Entitas
+                                </NavLink>
+
+
+                            </>
+
+                        }
+                        {role === 'petugas antrian' &&
+                            <>
+
+                                <NavLink to='/antrian' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/antrian' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Antrian
+                                </NavLink>
+
+                            </>
+
+                        }
+                        {role === 'petugas entitas' &&
+                            <>
+
+                                <NavLink to='/entitas' className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/entitas' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Entitas
+                                </NavLink>
+
+                            </>
+
+                        }
+
+                        {role === 'petugas rekam medis' &&
+                            <>
+
+
+                                <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rekam Medis
+                                </NavLink>
+
+                            </>
+
+                        }
+                        {role === 'petugas rawat inap' &&
+                            <>
+
+                                <NavLink to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rawat Inap
+                                </NavLink>
+
+                            </>
+
+                        }
+                        {role === 'petugas rawat jalan' &&
+                            <>
+
+                                <NavLink to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rawat Jalan
                                 </NavLink>
                             </>
 
                         }
 
+                        {role === 'dokter' &&
+                            <>
+                                <NavLink to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rekam Medis
+                                </NavLink>
+                                <NavLink to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rawat Inap
+                                </NavLink>
+                                <NavLink to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={` hover:bg-purple-50 rounded-lg text-black p-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-purple-400'}`}>
+                                    Rawat Jalan
+                                </NavLink>
+
+                            </>
+
+                        }
+
                         <div className=" flex items-center">
-                            {user ? (
+                            {user !== '' ? (
                                 <>
-                                    <svg onClick={() => { togglePop() }} className="w-8 hover:bg-blue-200 rounded-full p-1 cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg onClick={togglePop} className={`w-8 hover:bg-purple-200 rounded-full p-1 cursor-pointer ${popUser && 'bg-purple-200'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                                         <circle cx="12" cy="7" r="4" />
                                     </svg>
@@ -116,33 +182,143 @@ const Navigation = () => {
                         </button>
                     </div>
 
-                    <div className={`${popUser ? 'flex' : 'hidden'} absolute -bottom-48 right-5 bg-white p-5 w-80 border-2`} onBlur={() => { setPopUser(false) }} tabIndex={1}>
-                        <div className="text-black">
+                    <div className={`${popUser ? 'flex' : 'hidden'} absolute -bottom-48 right-5 p-5 w-80 border-2 rounded-lg bg-purple-400`} onBlur={() => { setPopUser(false) }} tabIndex={1}>
+                        <div className="text-white b">
                             <h2 className="font-bold mb-2">{user}</h2>
                             <p>{nama_lengkap}</p>
                             <p>Terdaftar sebagai :
                                 <span className="font-bold"> {role}</span></p>
-                            <button className="border-2 p-3 rounded-full mt-3" onClick={logout}>Logout</button>
+                            <button className="border-2 p-3 bg-white rounded-full mt-3 text-black" onClick={logout}>Logout</button>
                         </div>
+                        <div className="border-purple-300" style={{
+                            width: 0,
+                            height: 0,
+                            borderLeft: '15px solid transparent',
+                            borderRight: '15px solid transparent',
+                            borderBottom: '25px solid #c084fc ',
+                            position: 'absolute',
+                            top: '-20px',
+                            right: '38px'
+                        }}></div>
                     </div>
 
                 </div>
                 <div className={`${isOpen ? 'flex' : 'hidden'} md:hidden justify-center items-center flex-col border-b-2 border-b-gray`}>
-                    <NavLink onClick={()=>setIsOpen(false)} to='/pendaftaran' className={`w-40 text-center text-black py-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
-                        Pendaftaran
-                    </NavLink>
-                    <NavLink onClick={()=>setIsOpen(false)}  to='/otentifikasi' className={`w-40 text-center text-black py-2 ${location.pathname === '/otentifikasi' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
-                        Login
-                    </NavLink>
-                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
-                        Rekam Medis
-                    </NavLink>
-                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
-                        Rawat Inap
-                    </NavLink>
-                    <NavLink onClick={()=>setIsOpen(false)}  to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
-                        Rawat Jalan
-                    </NavLink>
+
+                    {user === '' &&
+                        <NavLink to='/otentifikasi' className='my-5 navPendaftaran block text-black px-4 p-2 rounded-full border-2 border-purple-400'>
+                            Login
+                        </NavLink>
+                    }
+                    {role === 'admin' &&
+                        <>
+                            <NavLink onClick={() => setIsOpen(false)} to='/pendaftaran' className={`w-40 text-center text-black py-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Pendaftaran
+                            </NavLink>
+
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rekam Medis
+                            </NavLink>
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Inap
+                            </NavLink>
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Jalan
+                            </NavLink>
+                            <div className="flex justify-evenly items-center p-2 border rounded-lg my-2 w-52">
+                                <svg onClick={togglePop} className={`h-10 w-10 hover:bg-purple-200 border rounded-full p-1 cursor-pointer ${popUser && 'bg-purple-200'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <button className="border-2 p-3 bg-white rounded-full text-black" onClick={logout}>Logout</button>
+                            </div>
+
+                        </>
+
+                    }
+                    {role === 'dokter' &&
+                        <>
+
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rekam Medis
+                            </NavLink>
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Inap
+                            </NavLink>
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Jalan
+                            </NavLink>
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas rawat jalan' &&
+                        <>
+
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatJalan') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatJalan' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Jalan
+                            </NavLink>
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas rawat inap' &&
+                        <>
+
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RawatInap') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RawatInap' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rawat Inap
+                            </NavLink>
+
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas rekam medis' &&
+                        <>
+
+                            <NavLink onClick={() => setIsOpen(false)} to={user !== '' ? ('/RekamMedis') : ('/otentifikasi')} className={`w-40 text-center text-black py-2 ${location.pathname === '/RekamMedis' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Rekam Medis
+                            </NavLink>
+
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas entitas' &&
+                        <>
+                            <NavLink onClick={() => setIsOpen(false)} to='/entitas' className={`w-40 text-center text-black py-2 ${location.pathname === '/otentifikasi' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Entitas
+                            </NavLink>
+
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas antrian' &&
+                        <>
+
+                            <NavLink onClick={() => setIsOpen(false)} to='/antrian' className={`w-40 text-center text-black py-2 ${location.pathname === '/otentifikasi' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Antrian
+                            </NavLink>
+
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+                    {role === 'petugas pendaftaran' &&
+                        <>
+                            <NavLink onClick={() => setIsOpen(false)} to='/pendaftaran' className={`w-40 text-center text-black py-2 ${location.pathname === '/pendaftaran' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Pendaftaran
+                            </NavLink>
+                            <NavLink onClick={() => setIsOpen(false)} to='/antrian' className={`w-40 text-center text-black py-2 ${location.pathname === '/otentifikasi' && 'p-2 m-2 rounded-lg border-2 border-black'}`}>
+                                Antrian
+                            </NavLink>
+
+                            <button className="border-2 p-3 bg-white rounded-full my-4 text-black" onClick={logout}>Logout</button>
+                        </>
+
+                    }
+
                 </div>
             </nav >
 

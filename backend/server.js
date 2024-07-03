@@ -105,6 +105,10 @@ app.post('/pendaftaran', (req, res) => {
                         registration: {
                             id: registrationResult.insertId,
                             pasien_id: pasien_id,
+                            nama_pasien: nama_pasien,
+                            jenis_kelamin: jenis_kelamin,
+                            alamat: alamat,
+                            no_telepon: no_telepon,
                             poliklinik: poliklinik,
                             dokter_id: parsedDokterId,
                             tipe_pembayaran: tipe_pembayaran,
@@ -329,19 +333,7 @@ app.get('/pasien/:id', (req, res) => {
         res.json(result);
     });
 });
-// Get all pasien
-app.get('/pasien', (req, res) => {
-    const { id } = req.params;
-    const query = 'SELECT * FROM pasien';
-    db.query(query, [id], (err, result) => {
-        if (err) {
-            console.error('Error executing query:', err.stack);
-            res.status(500).send('Error executing query');
-            return;
-        }
-        res.json(result);
-    });
-});
+
 
 app.get('/rawatJalan', (req, res) => {
     const query = 'SELECT * FROM rawat_jalan';
@@ -500,9 +492,15 @@ app.put('/skipAntrian', (req, res) => {
 
 app.put('/rawatJalanUpdate', (req, res) => {
     const {
+        jenisGelang,
+        currentKamar,
+        warnaGelang,
+        tanggalMasuk,
+        tanggalKeluar,
+        activePasien,
+        currentPage,
         currentRekam,
         jenisRawat,
-
         activeRow,
         tanggalKunjungan,
         namaDokter,
@@ -639,7 +637,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
     }).then(() => {
         return new Promise((resolve, reject) => {
 
-            if (!jenisRawat) {
+            if (jenisRawat) {
                 const selectQuery = 'SELECT * FROM rekam_medis WHERE rekam_medis_id = ?';
 
                 db.query(selectQuery, [currentRekam], (err, results) => {
@@ -656,32 +654,247 @@ app.put('/rawatJalanUpdate', (req, res) => {
 
                     // Get the row data
                     const row = results[0];
-                    row.jenis_rawat = 'rawat inap'
-                    // Prepare the data for the new row (excluding the 'id' if it's auto-incremented)
 
-                    delete row.rekam_medis_id;
 
-                    // Query to insert the new row
-                    const insertQuery = 'INSERT INTO rekam_medis SET ?';
 
-                    db.query(insertQuery, row, (err, inresults) => {
-                        if (err) {
-                            console.error('Error inserting the new row:', err);
-                            res.status(500).send('Error inserting the new row');
-                            return;
+                    if (currentPage === 'rawat_jalan') {
+                        row.jenis_rawat = 'rawat inap'
+                        if (poliklinik !== '' || namaDokter !== '') {
+                            const poliklinikValue = poliklinik !== '' ? poliklinik : null;
+                            const namaDokterValue = namaDokter !== '' ? namaDokter : null;
+                            row.poliklinik_id = poliklinikValue
+                            row.dokter_id = namaDokterValue
                         }
 
+                        // Prepare the data for the new row (excluding the 'id' if it's auto-incremented)
 
-                        const insertRekamQuery = 'INSERT INTO rawat_inap (rekam_medis_id, tanggal_masuk) VALUES (?, CURRENT_DATE)'
-                        db.query(insertRekamQuery, [inresults.insertId], (err, results) => {
+                        delete row.rekam_medis_id;
+
+                        // Query to insert the new row
+                        const insertQuery = 'INSERT INTO rekam_medis SET ?';
+
+                        db.query(insertQuery, row, (err, inresults) => {
+                            if (err) {
+                                console.error('Error inserting the new row:', err);
+                                res.status(500).send('Error inserting the new row');
+                                return;
+                            }
+                            const tarifQuery = 'UPDATE tarif_pasien SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
+                            db.query(tarifQuery, [inresults.insertId, currentRekam], (err, results) => {
+                                if (err) {
+                                    console.error('Error updating the row:', err);
+                                    res.status(500).send('Error updating the row');
+                                    return reject(err);
+                                }
+                                const resepQuery = 'UPDATE resep SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
+                                db.query(resepQuery, [inresults.insertId, currentRekam], (err, results) => {
+                                    if (err) {
+                                        console.error('Error updating the row:', err);
+                                        res.status(500).send('Error updating the row');
+                                        return reject(err);
+                                    }
+
+                                    const insertRekamQuery = 'INSERT INTO rawat_inap (rekam_medis_id, kamar_id,gelang_id, tanggal_masuk) VALUES (?,?,?, CURRENT_DATE)'
+                                    db.query(insertRekamQuery, [inresults.insertId, 6, jenisGelang], (err, resultsRawatInap) => {
+                                        if (err) {
+                                            console.error('Error inserting the new row:', err);
+                                            res.status(500).send('Error inserting the new row');
+                                            return;
+                                        }
+
+                                        const deleteRawat = 'DELETE FROM rawat_jalan WHERE rawat_jalan_id = ?'
+                                        db.query(deleteRawat, [activeRow], (err, results) => {
+                                            if (err) {
+                                                console.error('Error inserting the new row:', err);
+                                                res.status(500).send('Error inserting the new row');
+                                                return;
+                                            }
+ 
+
+                                            const checkKamar = 'DELETE FROM tarif_pasien WHERE rekam_medis_id = ? AND kamar_id IS NOT NULL';
+                                            const addKamar = 'INSERT INTO tarif_pasien (pasien_id, rekam_medis_id, kamar_id) VALUES (?,?,?)';
+
+                                            db.query(checkKamar, [inresults.insertId], (err, results) => {
+                                                if (err) {
+                                                    console.error('Error checking kamar:', err);
+                                                    res.status(500).send('Error checking kamar');
+                                                    return;
+                                                }
+
+                                              
+                                                    db.query(addKamar, [activePasien, inresults.insertId, 6], (err, results) => {
+                                                        if (err) {
+                                                            console.error('Error inserting the new row:', err);
+                                                            res.status(500).send('Error inserting the new row');
+                                                            return;
+                                                        }
+
+                                                        resolve();
+                                                    });
+                                               
+                                            });
+
+
+
+                                        })
+
+                                    })
+                                    /*  delRekam = 'DELETE FROM rekam_medis WHERE rekam_medis_id = ? '
+                                     db.query(delRekam, rekamId, (err, results) => {
+                                         if (err) {
+                                             console.error('Error inserting the new row:', err);
+                                             res.status(500).send('Error inserting the new row');
+                                             return;
+                                         }
+                                         resolve()
+                                     }) */
+                                });
+                            })
+                        })
+                    } else if (currentPage === 'rawat_inap') {
+                        row.jenis_rawat = 'rawat jalan'
+                        if (poliklinik !== '' || namaDokter !== '') {
+                            const poliklinikValue = poliklinik !== '' ? poliklinik : null;
+                            const namaDokterValue = namaDokter !== '' ? namaDokter : null;
+                            row.poliklinik_id = poliklinikValue
+                            row.dokter_id = namaDokterValue
+                        }
+
+                        delete row.rekam_medis_id;
+
+                        // Query to insert the new row
+                        const insertQuery = 'INSERT INTO rekam_medis SET ?';
+
+                        db.query(insertQuery, row, (err, inresults) => {
                             if (err) {
                                 console.error('Error inserting the new row:', err);
                                 res.status(500).send('Error inserting the new row');
                                 return;
                             }
 
-                            const deleteRawat = 'DELETE FROM rawat_jalan WHERE rawat_jalan_id = ?'
-                            db.query(deleteRawat, [activeRow], (err, results) => {
+                            const tarifQuery = 'UPDATE tarif_pasien SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
+                            db.query(tarifQuery, [inresults.insertId, currentRekam], (err, results) => {
+                                if (err) {
+                                    console.error('Error updating the row:', err);
+                                    res.status(500).send('Error updating the row');
+                                    return reject(err);
+                                }
+
+                                const resepQuery = 'UPDATE resep SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
+                                db.query(resepQuery, [inresults.insertId, currentRekam], (err, results) => {
+                                    if (err) {
+                                        console.error('Error updating the row:', err);
+                                        res.status(500).send('Error updating the row');
+                                        return reject(err);
+                                    }
+                                    const insertRekamQuery = 'INSERT INTO rawat_jalan (rekam_medis_id, tanggal_kunjungan) VALUES (?, CURRENT_DATE)'
+                                    db.query(insertRekamQuery, [inresults.insertId], (err, results) => {
+                                        if (err) {
+                                            console.error('Error inserting the new row:', err);
+                                            res.status(500).send('Error inserting the new row');
+                                            return;
+                                        }
+
+                                        const deleteRawat = 'DELETE FROM rawat_inap WHERE rawat_inap_id = ?'
+                                        db.query(deleteRawat, [activeRow], (err, results) => {
+                                            if (err) {
+                                                console.error('Error inserting the new row:', err);
+                                                res.status(500).send('Error inserting the new row');
+                                                return;
+                                            }
+                                            resolve()
+
+
+                                        })
+                                    })
+                                    /*  delRekam = 'DELETE FROM rekam_medis WHERE rekam_medis_id = ? '
+                                     db.query(delRekam, rekamId, (err, results) => {
+                                         if (err) {
+                                             console.error('Error inserting the new row:', err);
+                                             res.status(500).send('Error inserting the new row');
+                                             return;
+                                         }
+                                         resolve()
+                                     }) */
+                                })
+                            });
+                        });
+                    }
+
+                });
+            } else if (!jenisRawat) {
+                if (poliklinik !== '' || namaDokter !== '') {
+                    const selectQuery = 'SELECT * FROM rekam_medis WHERE rekam_medis_id = ?';
+
+                    db.query(selectQuery, [currentRekam], (err, results) => {
+                        if (err) {
+                            console.error('Error fetching the row:', err);
+                            res.status(500).send('Error fetching the row');
+                            return reject(err);
+                        }
+
+                        if (results.length === 0) {
+                            res.status(404).send('Row not found');
+                            return resolve();
+                        }
+
+                        // Get the row data
+                        const row = results[0];
+
+                        const rawatType = currentPage === 'rawat_jalan' ? 'rawat jalan' : 'rawat inap';
+
+
+                        const poliklinikValue = poliklinik !== '' ? poliklinik : null;
+                        const namaDokterValue = namaDokter !== '' ? namaDokter : null;
+                        row.poliklinik_id = poliklinikValue;
+                        row.dokter_id = namaDokterValue;
+                        row.jenis_rawat = rawatType;
+
+                        delete row.rekam_medis_id;
+                        const insertQuery = 'INSERT INTO rekam_medis SET ?';
+
+                        db.query(insertQuery, row, (err, inresults) => {
+                            if (err) {
+                                console.error('Error inserting the new row:', err);
+                                res.status(500).send('Error inserting the new row');
+                                return reject(err);
+                            }
+
+                            const changeRM = `UPDATE ${currentPage} SET rekam_medis_id = ? WHERE ${currentPage}_id = ?`;
+                            db.query(changeRM, [inresults.insertId, activeRow], (err, results) => {
+                                if (err) {
+                                    console.error('Error updating the row:', err);
+                                    res.status(500).send('Error updating the row');
+                                    return reject(err);
+                                }
+                                const tarifQuery = 'UPDATE tarif_pasien SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
+                                db.query(tarifQuery, [inresults.insertId, currentRekam], (err, results) => {
+                                    if (err) {
+                                        console.error('Error updating the row:', err);
+                                        res.status(500).send('Error updating the row');
+                                        return reject(err);
+                                    }
+                                    resolve();
+                                });
+                            });
+                        });
+                    });
+
+
+                    /* if (poliklinik !== '' || namaDokter !== '') {
+                        const poliklinikValue = poliklinik !== '' ? poliklinik : null;
+                        const namaDokterValue = namaDokter !== '' ? namaDokter : null;
+                        const rawatType = currentPage === 'rawat_jalan' ? 'rawat jalan' : 'rawat inap';
+                        const changePoliQuery = 'INSERT INTO rekam_medis (pasien_id, poliklinik_id, dokter_id,jenis_rawat,waktu_rekam) VALUES (?,?,?,?,CURRENT_TIMESTAMP)'
+                        db.query(changePoliQuery, [activePasien, poliklinikValue, namaDokterValue, rawatType], (err, results) => {
+                            if (err) {
+                                console.error('Error inserting the new row:', err);
+                                res.status(500).send('Error inserting the new row');
+                                return;
+                            }
+    
+                            const changeRM = `UPDATE ${currentPage} set rekam_medis_id = ? WHERE ${currentPage}_id = ? `
+                            db.query(changeRM, [results.insertId, activeRow], (err, results) => {
                                 if (err) {
                                     console.error('Error inserting the new row:', err);
                                     res.status(500).send('Error inserting the new row');
@@ -690,28 +903,75 @@ app.put('/rawatJalanUpdate', (req, res) => {
                                 resolve()
                             })
                         })
-                        /*  delRekam = 'DELETE FROM rekam_medis WHERE rekam_medis_id = ? '
-                         db.query(delRekam, rekamId, (err, results) => {
-                             if (err) {
-                                 console.error('Error inserting the new row:', err);
-                                 res.status(500).send('Error inserting the new row');
-                                 return;
-                             }
-                             resolve()
-                         }) */
-                    });
-                });
-            } else if (jenisRawat) {
-                resolve()
+                    } else {
+                        resolve()
+                    } */
+                }
+                resolve();
             } else {
                 resolve()
             }
         })
     }).then(() => {
-        res.json({ message: 'All operations completed successfully' });
-    }).catch(error => {
-        res.status(500).send(error);
-    });
+        return new Promise((resolve, reject) => {
+            let rekam_medis_id = currentRekam
+            let kamar_id = currentKamar
+            let gelang_id = warnaGelang
+            let tanggal_masuk = tanggalKunjungan
+            let tanggal_keluar = tanggalKeluar
+            const fieldsToUpdate = {
+                rekam_medis_id,
+                kamar_id,
+                gelang_id,
+                tanggal_masuk,
+                tanggal_keluar,
+            };
+            const setClause = [];
+            const values = [];
+
+            for (const [key, value] of Object.entries(fieldsToUpdate)) {
+                if (value !== undefined && value !== '' && value !== null) {
+                    setClause.push(`${key} = ?`);
+                    values.push(value);
+                }
+            }
+ 
+            if (setClause.length > 0 && values.length > 0) {
+                const sql = `UPDATE rawat_inap SET ${setClause.join(', ')} WHERE rawat_inap_id = ?`;
+                values.push(activeRow);
+                db.query(sql, values, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                        return reject('Error updating rekam_medis');
+                    }
+
+
+                    resolve();
+
+                });
+            }else{
+                resolve()
+            }
+            if (currentKamar !== '') {
+                const Tsql = `UPDATE tarif_pasien SET kamar_id = ? WHERE rekam_medis_id = ? AND kamar_id IS NOT NULL`;
+                db.query(Tsql, [currentKamar, currentRekam], (err, results) => {
+                    if (err) {
+                        console.log(err);
+                        return reject('Error updating rekam_medis');
+                    }
+                    resolve();
+                })
+            }
+            else {
+                resolve();
+            }
+        })
+    })
+        .then(() => {
+            res.json({ message: 'All operations completed successfully' });
+        }).catch(error => {
+            res.status(500).send(error);
+        });
 });
 
 app.post('/switchRawat', (req, res) => {
@@ -763,6 +1023,85 @@ app.post('/switchRawat', (req, res) => {
 });
 
 
+
+
+//CRUD ENTITAS
+// Get all entities
+app.get('/:type', (req, res) => {
+    const { type } = req.params;
+    const validTypes = ['pasien', 'dokter', 'perawat', 'poliklinik'];
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const query = `SELECT * FROM ${type}`;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results);
+    });
+});
+
+// Update entity
+app.put('/:type/:id', (req, res) => {
+    const { type, id } = req.params;
+    const validTypes = ['pasien', 'dokter', 'perawat'];
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const updateData = req.body;
+    const query = `UPDATE ${type} SET ? WHERE ${type}_id = ?`;
+    db.query(query, [updateData, id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database update error' });
+        }
+        res.json({ ...updateData, [`${type}_id`]: id });
+    });
+});
+
+// Add new entity
+app.post('/:type', (req, res) => {
+    const { type } = req.params;
+    const validTypes = ['pasien', 'dokter', 'perawat'];
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const newData = req.body;
+    const query = `INSERT INTO ${type} SET ?`;
+    db.query(query, newData, (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database insert error' });
+        }
+        res.json({ ...newData, [`${type}_id`]: result.insertId });
+    });
+});
+
+// Delete entity
+app.delete('/:type/:id', (req, res) => {
+    const { type, id } = req.params;
+    const validTypes = ['pasien', 'dokter', 'perawat'];
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const query = `DELETE FROM ${type} WHERE ${type}_id = ?`;
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database delete error' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: `${type} not found` });
+        }
+        res.json({ message: `${type} with ID ${id} deleted successfully` });
+    });
+});
 
 // Start the Express server
 app.listen(port, () => {
