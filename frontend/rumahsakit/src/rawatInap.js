@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MdPrint } from 'react-icons/md';
 import SearchComponent from "./components/searchComponent";
 import SearchComponent2 from "./components/searchComponent2";
 import RawatJalan from "./rawatJalan";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import qR from './assets/qr.png'; 
 
 
 
@@ -424,7 +427,39 @@ const RawatInap = () => {
         setPoliklinik(dokter.find(d => d.dokter_id == id)?.poliklinik_id)
     }
 
+    const [isVisible, setIsVisible] = useState(false);
+    const boxRef = useRef(null);
 
+    const handleToggle = () => {
+
+        setIsVisible(!isVisible);
+    };
+
+    const handleBlur = (event) => {
+        if (boxRef.current && !boxRef.current.contains(event.relatedTarget)) {
+            setIsVisible(false);
+        }
+
+    };
+
+    const gelangRef = useRef(null)
+
+    const downloadPDF = async (ref, filename) => {
+        const input = ref.current;
+        html2canvas(input).then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: `${filename === 'gelang' ? 'landscape':'portrait'}`,
+            unit: 'pt',
+            format: [canvas.width, canvas.height]
+          });
+    
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${filename}.pdf`);
+        }).catch(error => {
+          console.error('Error generating PDF: ', error);
+        });
+      };
 
     return (
         <div className="flex flex-col items-center max-w-4xl mx-auto p-4 px-8 rounded-xl shadow-md my-2 text-sm sm:text-lg">
@@ -696,7 +731,32 @@ const RawatInap = () => {
                                                                                     ))
                                                                                 }
                                                                             </select>
-                                                                            <div className="p-2 border border-black m-2 cursor-pointer rounded-md">Cetak Gelang</div>
+                                                                            {isVisible && 
+                                                                            <div className="z-20 fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center"
+
+                                                                            >
+                                                                                <div style={{ backgroundColor: `${warnaGelang !== '' ? gelang.find(g => g.gelang_id === warnaGelang)?.warna : gelang.find(g => g.gelang_id === r.gelang_id)?.warna}` }} className='shadow-md p-4 min-w-96 w-full h-fit relative rounded-lg justify-center flex'
+                                                                                    ref={boxRef}
+                                                                                    tabIndex={-1}
+                                                                                    onBlur={handleBlur}
+                                                                                    onFocus={() => setIsVisible(true)}
+                                                                                >
+                                                                                    <div ref={gelangRef}  className="bg-white p-4 w-fit rounded-lg flex border" style={{ border: `10px solid ${warnaGelang !== '' ? gelang.find(g => g.gelang_id === warnaGelang)?.warna : gelang.find(g => g.gelang_id === r.gelang_id)?.warna}` }}>
+                                                                                        <div className="border p-2">
+                                                                                            <div>nama : {pasienData.find(p => p.pasien_id === rekamData.find(rD => rD.rekam_medis_id === rJ.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
+                                                                                            <div>diagnosis : {rekamData[r.rekam_medis_id - 1]?.diagnosis}</div>
+                                                                                            <div>dokter : {dokter.find(d => d.dokter_id === rekamData[r.rekam_medis_id - 1]?.dokter_id)?.nama_dokter}</div>
+                                                                                            <div>tanggal masuk : {formatDate(r.tanggal_masuk)}</div>
+                                                                                        </div>
+                                                                                        <img className="p-2 w-32 h-32" src={qR} alt="" />
+
+                                                                                    </div>
+                                                                                </div>
+                                                                                <button onClick={()=> downloadPDF(gelangRef, 'gelang')} className="absolute bottom-44 bg-white p-4">download</button>
+                                                                            </div>
+                                                                            
+                                                                            }
+                                                                            <div onClick={handleToggle} className="p-2 border border-black m-2 cursor-pointer rounded-md">Lihat Gelang</div>
                                                                         </td>
                                                                     </tr>
 
@@ -815,7 +875,7 @@ const RawatInap = () => {
                                                                                         .filter(tarifData => tarifData.rekam_medis_id === r.rekam_medis_id)
                                                                                         .reduce((sum, tarifData) => {
                                                                                             const layananCost = dataLayanan[tarifData.layanan_id - 1]?.harga || 0;
-                                                                                            return sum + layananCost ;
+                                                                                            return sum + layananCost;
                                                                                         }, 0) +
                                                                                         (
                                                                                             tarif

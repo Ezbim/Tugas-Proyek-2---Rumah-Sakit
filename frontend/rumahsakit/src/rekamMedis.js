@@ -1,5 +1,9 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from 'react-router-dom';
 import { MdPrint } from 'react-icons/md';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 const RekamMedis = () => {
     const [rekamData, setRekamData] = useState([])
     const [dokterData, setDokterData] = useState([])
@@ -25,7 +29,7 @@ const RekamMedis = () => {
             .then(response => response.json())
             .then(data => setRekamData(data))
             .catch(error => console.error('Error fetching poliklinik data:', error));
-    }, []);
+    }, []); 
     useEffect(() => {
         fetch('http://localhost:3000/pasien')
             .then(response => response.json())
@@ -54,6 +58,7 @@ const RekamMedis = () => {
     const handlePasienClick = (id) => {
 
         setActivePasien(activePasien === id ? null : id);
+        setActiveRow(null)
     };
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -126,7 +131,7 @@ const RekamMedis = () => {
         if (boxRef.current && !boxRef.current.contains(event.relatedTarget)) {
             setIsVisible(false);
         }
-        setCurrentDate('')
+       
     };
 
     useEffect(() => {
@@ -136,6 +141,25 @@ const RekamMedis = () => {
     }, [isVisible]);
 
 
+
+    const rekamRef = useRef(null)
+
+    const downloadPDF = async (ref, filename) => {
+        const input = ref.current;
+        html2canvas(input).then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: `${filename === 'RekamMedis' ? 'landscape':'portrait'}`,
+            unit: 'pt',
+            format: [canvas.width, canvas.height]
+          });
+    
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${filename}.pdf`);
+        }).catch(error => {
+          console.error('Error generating PDF: ', error);
+        });
+      };
 
     return (
         <div className="flex flex-col items-center max-w-3xl mx-auto p-4 rounded-xl shadow-md my-2 text-md sm:text-lg">
@@ -166,7 +190,7 @@ const RekamMedis = () => {
                                     onClick={() => handlePasienClick(rD.pasien_id)}
                                 >
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{rD.rekam_medis_id}</td>
-                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
+                                    <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{pasienData.find(p => p.pasien_id === rekamData.find(r => r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{dokterData[rD.dokter_id - 1]?.nama_dokter}</td>
                                     <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{poliData[rD.poliklinik_id - 1]?.nama_poliklinik}</td>
                                     {isSmallScreen ? '' : <td className="border border-gray-300 sm:px-4  px-auto py-2 text-center">{formatDate(rD.waktu_rekam)}</td>}
@@ -178,16 +202,16 @@ const RekamMedis = () => {
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40 ">Nama </div>:
-                                                    <div className="px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
+                                                    <div className="px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r => r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</div>
                                                 </div>
 
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Tanggal Lahir</div>:
-                                                    <div className="px-4">{formatDate2(pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.tanggal_lahir)}</div>
+                                                    <div className="px-4">{formatDate2(pasienData.find(p => p.pasien_id === rekamData.find(r => r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.tanggal_lahir)}</div>
                                                 </div>
                                                 <div className=" flex items-center mb-2" >
                                                     <div className=" min-w-40">Jenis Kelamin</div>:
-                                                    <div className=" px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.jenis_kelamin}</div>
+                                                    <div className=" px-4">{pasienData.find(p => p.pasien_id === rekamData.find(r => r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.jenis_kelamin}</div>
                                                 </div>
                                                 <div className="flex flex-col mb-2 sm:flex-col " >
                                                     <div className="flex mb-2">
@@ -198,27 +222,27 @@ const RekamMedis = () => {
 
 
                                                         {rekamData.filter(r => r.pasien_id === activePasien)
-                                                        .map((r) => (
-                                                           
+                                                            .map((r) => 
+                                                                
 
-
+                                                                r.diagnosis !== null &&
 
 
                                                                 <div
-                                                                    className={`h-20 w-full sm:w-48 min-w-48 p-2 m-1 cursor-pointer rounded-lg shadow-md flex  flex-col border border-black ${activeRow === r.rekam_medis_id ? 'bg-gray-300  ' : 'hover:bg-gray-100 bg-white '}`}
+                                                                    className={`h-24  sm:w-52 min-w-48 p-2 m-1 cursor-pointer rounded-lg shadow-md flex  flex-col border border-black ${activeRow === r.rekam_medis_id ? 'bg-gray-300  ' : 'hover:bg-gray-100 bg-white '}`}
                                                                     key={r}
                                                                     onClick={() => handleRowClick(r.rekam_medis_id)}
                                                                 >
-                                                                
-                                                                    <div className={` w-fit h-fit px-2 rounded-md ${activeRow === r.rekam_medis_id ? 'bg-white border border-black text-black' : 'bg-white border border-black text-black'}`}>{formatDate3(r.waktu_rekam)}</div>
-                                                                    <div className=" overflow-auto">{rekamData[r.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[r.rekam_medis_id - 1]?.diagnosis}</div>
 
+                                                                    <div className={` w-fit h-fit px-2 rounded-md ${activeRow === r.rekam_medis_id ? 'bg-white border border-black text-black' : 'bg-white border border-black text-black'}`}>{formatDate(r.waktu_rekam)}</div>
+                                                                    <div className="py-2 overflow-none flex items-center gap-2">{r.jenis_rawat&& <div >{r.jenis_rawat} </div> }{rekamData[r.rekam_medis_id - 1]?.diagnosis !== '' && <div>- {rekamData[r.rekam_medis_id - 1]?.diagnosis === null ? '-' : rekamData[r.rekam_medis_id - 1]?.diagnosis}</div> }</div>
+                                                                 
 
                                                                 </div>
 
 
-                                                            
-                                                        ))}
+
+                                                            )}
                                                     </div>
                                                 </div>
 
@@ -227,7 +251,7 @@ const RekamMedis = () => {
                                         </tr>
                                         {rekamData.map((rekam) => (
                                             activeRow === rekam.rekam_medis_id && (
-                                                <tr key={rekam.rekam_medis_id}>
+                                                <tr key={rekam.rekam_medis_id} ref={rekamRef}>
                                                     <td colSpan="5" className="border border-gray-300 sm:px-4  px-auto py-2">
                                                         <div className="bg-gray-100 p-4">
                                                             <div className="flex items-center my-5 justify-between">
@@ -255,7 +279,7 @@ const RekamMedis = () => {
                                                             <table className="w-full">
                                                                 <tr>
                                                                     <td className="border p-2 border-gray-400 w-1/4">Nama pasien :</td>
-                                                                    <td className="border p-2 border-gray-400" >{pasienData.find(p => p.pasien_id === rekamData.find(r=> r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
+                                                                    <td className="border p-2 border-gray-400" >{pasienData.find(p => p.pasien_id === rekamData.find(r => r.rekam_medis_id === rD.rekam_medis_id)?.pasien_id)?.nama_pasien}</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td className="border p-2 border-gray-400">Dokter :</td>
@@ -298,14 +322,14 @@ const RekamMedis = () => {
                                                                             <button className="border border-black rounded-lg p-2" onClick={handleToggle}>Lihat Resep</button>
                                                                             {isVisible && (
                                                                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center"
-                                                                                   
+
                                                                                 >
 
-                                                                                    <div className="p-5 bg-white min-w-72 h-3/4 relative"
-                                                                                     ref={boxRef}
-                                                                                     tabIndex={-1}
-                                                                                     onBlur={handleBlur}
-                                                                                     onFocus={() => setIsVisible(true)}
+                                                                                    <div className="p-5 bg-white min-w-72  h-3/4 relative" 
+                                                                                        ref={boxRef}
+                                                                                        tabIndex={-1}
+                                                                                        onBlur={handleBlur}
+                                                                                        onFocus={() => setIsVisible(true)}
                                                                                     >
                                                                                         <div className="flex gap-2 items-center justify-center border-b p-2">
                                                                                             <svg className="mx-1" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -353,13 +377,16 @@ const RekamMedis = () => {
                                                                                                     )
                                                                                                 ))}
                                                                                             </ol>
-                                                                                            
+
                                                                                         </div>
                                                                                         <div className="absolute bottom-5 left-0 w-full p2  flex flex-col justify-center items-center">
                                                                                             <img className="w-28" src="https://upload.wikimedia.org/wikipedia/commons/6/68/Meryl_Streep_Signature.svg" alt="" />
-                                                                                            <div className="border-t w-fit">{dokterData.find(d=>d.dokter_id === rekam.dokter_id)?.nama_dokter}</div>
+                                                                                            <div className="border-t w-fit">{dokterData.find(d => d.dokter_id === rekam.dokter_id)?.nama_dokter}</div>
                                                                                         </div>
+                                                                                        <button  className="p-2 bg-white min-w-28 absolute bottom-0 -right-32" onClick={()=>downloadPDF(boxRef, 'resep')}>Download</button>
                                                                                     </div>
+
+                                                                                    
 
                                                                                 </div>)}
                                                                         </div>
@@ -375,7 +402,7 @@ const RekamMedis = () => {
 
                                                             </table>
                                                             <p className="m-4">Dibuat pada : {formatDate(rekam.waktu_rekam)}</p>
-                                                            <button className="flex mx-auto w-1/2 border-2 p-2 items-center justify-center gap-2 my-6 hover:bg-purple-400" >print <MdPrint className='' /></button>
+                                                            <button onClick={()=> downloadPDF(rekamRef, 'RekamMedis')} className="flex mx-auto w-1/2 border-2 p-2 items-center justify-center gap-2 my-6 hover:bg-purple-400" >print <MdPrint className='' /></button>
 
 
                                                             {/* Add more details as needed */}

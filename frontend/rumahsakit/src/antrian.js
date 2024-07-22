@@ -152,7 +152,7 @@ const Antrian = (e) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {firstAntrian ? (
+                        {firstAntrian /* && selectedPoli  */? (
                             antrianData.filter(antri => antri.poliklinik_id === selectedPoli)
                                 .map((antri, index) => {
                                     return (

@@ -686,13 +686,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
                                     res.status(500).send('Error updating the row');
                                     return reject(err);
                                 }
-                                const resepQuery = 'UPDATE resep SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
-                                db.query(resepQuery, [inresults.insertId, currentRekam], (err, results) => {
-                                    if (err) {
-                                        console.error('Error updating the row:', err);
-                                        res.status(500).send('Error updating the row');
-                                        return reject(err);
-                                    }
+                            
 
                                     const insertRekamQuery = 'INSERT INTO rawat_inap (rekam_medis_id, kamar_id,gelang_id, tanggal_masuk) VALUES (?,?,?, CURRENT_DATE)'
                                     db.query(insertRekamQuery, [inresults.insertId, 6, jenisGelang], (err, resultsRawatInap) => {
@@ -736,7 +730,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
 
 
 
-                                        })
+                                  
 
                                     })
                                     /*  delRekam = 'DELETE FROM rekam_medis WHERE rekam_medis_id = ? '
@@ -780,13 +774,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
                                     return reject(err);
                                 }
 
-                                const resepQuery = 'UPDATE resep SET rekam_medis_id = ? WHERE rekam_medis_id = ? '
-                                db.query(resepQuery, [inresults.insertId, currentRekam], (err, results) => {
-                                    if (err) {
-                                        console.error('Error updating the row:', err);
-                                        res.status(500).send('Error updating the row');
-                                        return reject(err);
-                                    }
+                                
                                     const insertRekamQuery = 'INSERT INTO rawat_jalan (rekam_medis_id, tanggal_kunjungan) VALUES (?, CURRENT_DATE)'
                                     db.query(insertRekamQuery, [inresults.insertId], (err, results) => {
                                         if (err) {
@@ -818,7 +806,7 @@ app.put('/rawatJalanUpdate', (req, res) => {
                                      }) */
                                 })
                             });
-                        });
+                    
                     }
 
                 });

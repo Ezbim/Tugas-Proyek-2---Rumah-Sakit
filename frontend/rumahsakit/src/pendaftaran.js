@@ -162,8 +162,8 @@ function Pendaftaran() {
     }, [isVisible]);
 
     useEffect(()=>{
-        console.log(registrationData)
-    },[registrationData])
+        console.log(dokter_id)
+    },[dokter_id])
 
 
     return (
@@ -336,7 +336,7 @@ function Pendaftaran() {
                             <p><strong>Nama Pasien:</strong> {isPasienBaru ? nama_pasien : pasienData[0].nama_pasien}</p>
                             {!isPasienBaru && <p><strong>ID Pasien:</strong> {!isPasienBaru ? pasien_id : "N/A"}</p>}
                             <p><strong>Poliklinik:</strong> {poliklinikOption[poliklinik - 1]?.nama_poliklinik}</p>
-                            <p><strong>Dokter:</strong> {dokterOptions[dokter_id - 1]?.nama_dokter}</p>
+                            <p><strong>Dokter:</strong> {dokterOptions.find(d => d.dokter_id === dokter_id)?.nama_dokter}</p>
                             <p><strong>Tipe Pembayaran:</strong> {tipe_pembayaran}</p>
                         </div>
                     </>
